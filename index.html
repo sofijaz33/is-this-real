@@ -68,10 +68,41 @@
   .panel { display: none; padding: 2rem; }
   .panel.active { display: block; }
   .panel-label { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-soft); margin-bottom: 0.6rem; }
+  .textarea-wrap { position: relative; }
   .panel textarea { width: 100%; min-height: 140px; border: 1.5px solid var(--border); border-radius: var(--radius); padding: 1rem 1.1rem; font-family: inherit; font-size: 1rem; color: var(--text); resize: vertical; line-height: 1.6; transition: border-color 0.2s; background: #fafbfd; }
   .panel textarea:focus { outline: none; border-color: var(--navy); background: var(--white); }
   .panel textarea::placeholder { color: #aab; }
   .hint { font-size: 0.85rem; color: var(--text-soft); margin-top: 0.5rem; line-height: 1.5; }
+
+  /* ── VOICE ── */
+  .mic-btn { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.75rem; padding: 0.65rem 1.2rem; background: var(--white); border: 1.5px solid var(--border); border-radius: 999px; font-family: inherit; font-size: 0.9rem; font-weight: 500; color: var(--navy); cursor: pointer; transition: all 0.2s; }
+  .mic-btn:hover { border-color: var(--navy); background: var(--sky); }
+  .mic-btn.listening { border-color: #c0392b; background: #fdeaea; color: #c0392b; animation: micPulse 1.2s ease-in-out infinite; }
+  @keyframes micPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(192,57,43,0.3); } 50% { box-shadow: 0 0 0 8px rgba(192,57,43,0); } }
+  .mic-icon { font-size: 1.1rem; }
+
+  .listen-btn { display: none; align-items: center; gap: 0.5rem; margin-top: 0.75rem; padding: 0.65rem 1.2rem; background: var(--real-bg); border: 1.5px solid var(--real-border); border-radius: 999px; font-family: inherit; font-size: 0.9rem; font-weight: 500; color: var(--real-green); cursor: pointer; transition: all 0.2s; }
+  .listen-btn:hover { background: #d0edda; }
+  .listen-btn.speaking { background: #d0edda; }
+  .no-voice-msg { font-size: 0.8rem; color: var(--text-soft); margin-top: 0.5rem; display: none; }
+
+  /* ── CALL CHECKLIST ── */
+  .checklist { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.25rem; }
+  .check-item { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.8rem 1rem; background: var(--white); border: 1.5px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: border-color 0.2s, background 0.2s; font-size: 0.95rem; line-height: 1.5; }
+  .check-item:hover { border-color: var(--navy); background: var(--sky); }
+  .check-item input[type=checkbox] { width: 20px; height: 20px; min-width: 20px; accent-color: var(--navy); cursor: pointer; margin-top: 2px; }
+  .check-item input:checked + span { color: var(--navy); font-weight: 500; }
+  .check-item:has(input:checked) { border-color: var(--navy); background: var(--sky); }
+
+  .score-box { border-radius: var(--radius); padding: 1.4rem 1.5rem; border: 1.5px solid; animation: fadeIn 0.3s ease; margin-bottom: 0.5rem; }
+  .score-box.safe { background: var(--real-bg); border-color: var(--real-border); }
+  .score-box.warning { background: var(--unsure-bg); border-color: var(--unsure-border); }
+  .score-box.danger { background: var(--fake-bg); border-color: var(--fake-border); }
+  .score-verdict { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; }
+  .score-box.safe .score-verdict { color: var(--real-green); }
+  .score-box.warning .score-verdict { color: var(--unsure-amber); }
+  .score-box.danger .score-verdict { color: var(--fake-red); }
+  .score-text { font-size: 0.95rem; color: var(--text-mid); line-height: 1.7; }
 
   .check-btn { display: block; width: 100%; margin-top: 1.25rem; padding: 1rem; background: var(--navy); color: #fff; border: none; border-radius: var(--radius); font-family: inherit; font-size: 1.05rem; font-weight: 600; cursor: pointer; letter-spacing: 0.01em; transition: background 0.2s, transform 0.1s; }
   .check-btn:hover { background: var(--navy-light); }
@@ -129,8 +160,11 @@
   .faq-answer ul { padding-left: 1.2rem; margin-top: 0.5rem; }
   .faq-answer li { margin-bottom: 0.4rem; }
 
-  .privacy-notice { background: var(--sky); border: 1px solid var(--sky-mid); border-radius: var(--radius); padding: 1.2rem 1.5rem; font-size: 0.88rem; color: var(--text-mid); line-height: 1.7; max-width: 720px; margin: 0 auto 3rem; }
-  .privacy-notice strong { color: var(--navy); }
+  .link-field-wrap { margin-top: 1rem; border-top: 1px dashed var(--border); padding-top: 1rem; }
+  .link-field-wrap .panel-label { margin-bottom: 0.4rem; }
+  .link-input { width: 100%; border: 1.5px solid var(--border); border-radius: var(--radius); padding: 0.7rem 1rem; font-family: inherit; font-size: 0.95rem; color: var(--text); background: #fafbfd; transition: border-color 0.2s; }
+  .link-input:focus { outline: none; border-color: var(--navy); background: var(--white); }
+  .link-input::placeholder { color: #aab; }
 
   footer { background: var(--navy); color: #b8cbf0; text-align: center; padding: 2.5rem 2rem; font-size: 0.85rem; line-height: 1.8; }
   footer a { color: #88b8ff; text-decoration: none; }
@@ -181,12 +215,12 @@
 <section class="hero">
   <p class="hero-eyebrow" data-en="Free · No sign-up · Powered by AI" data-fr="Gratuit · Sans inscription · Propulsé par l'IA">Free · No sign-up · Powered by AI</p>
   <h1 data-en="Is this message<br><em>real or fake?</em>" data-fr="Ce message est-il<br><em>vrai ou faux ?</em>">Is this message<br><em>real or fake?</em></h1>
-  <p class="hero-sub" data-en="Paste a suspicious WhatsApp message, a news headline, or describe a photo. We'll tell you plainly — and explain why." data-fr="Collez un message WhatsApp suspect, un titre d'actualité ou décrivez une photo. On vous répond clairement — et on vous explique pourquoi.">Paste a suspicious WhatsApp message, a news headline, or describe a photo. We'll tell you plainly — and explain why.</p>
+  <p class="hero-sub" data-en="Paste a suspicious message, news headline, or describe a photo — and add a link for extra analysis. We'll tell you plainly — and explain why." data-fr="Collez un message suspect, un titre d'actualité ou décrivez une photo — ajoutez un lien pour une analyse approfondie. On vous répond clairement.">Paste a suspicious message, news headline, or describe a photo — and add a link for extra analysis. We'll tell you plainly — and explain why.</p>
   <div class="hero-badges">
     <span class="badge" data-en="💬 WhatsApp messages" data-fr="💬 Messages WhatsApp">💬 WhatsApp messages</span>
     <span class="badge" data-en="📰 News headlines" data-fr="📰 Titres d'actualité">📰 News headlines</span>
     <span class="badge" data-en="🖼 Suspicious photos" data-fr="🖼 Photos suspectes">🖼 Suspicious photos</span>
-    <span class="badge" data-en="📞 Voice call claims" data-fr="📞 Arnaques téléphoniques">📞 Voice call claims</span>
+    <span class="badge" data-en="🔗 Suspicious links" data-fr="🔗 Liens suspects">🔗 Suspicious links</span>
   </div>
 </section>
 
@@ -203,6 +237,9 @@
       <button class="tab-btn" role="tab" onclick="switchTab(this, 'photo')" aria-selected="false">
         <span class="tab-icon">🖼</span> <span data-en="Photo or video" data-fr="Photo ou vidéo">Photo or video</span>
       </button>
+      <button class="tab-btn" role="tab" onclick="switchTab(this, 'call')" aria-selected="false">
+        <span class="tab-icon">📞</span> <span data-en="Suspicious call" data-fr="Appel suspect">Suspicious call</span>
+      </button>
     </div>
 
     <!-- MESSAGE PANEL -->
@@ -212,12 +249,21 @@
         data-placeholder-en="e.g. &quot;Your bank account has been locked. Click here immediately to verify your identity: www.secure-bank-verify.net&quot;"
         data-placeholder-fr="Ex. : « Votre compte bancaire a été suspendu. Cliquez ici immédiatement : www.credit-agricole-secure-verify.net »"
         placeholder="e.g. &quot;Your bank account has been locked. Click here immediately to verify your identity: www.secure-bank-verify.net&quot;"></textarea>
+      <button class="mic-btn" onclick="startListening('message')" id="mic-message">
+        <span class="mic-icon">🎤</span> <span data-en="Or speak your message" data-fr="Ou parlez votre message">Or speak your message</span>
+      </button>
+      <p class="no-voice-msg" id="no-voice-message" data-en="Voice input not supported in this browser. Try Chrome or Safari." data-fr="Saisie vocale non supportée. Essayez Chrome ou Safari."></p>
       <p class="hint" data-en="Works with WhatsApp forwards, SMS, emails, or anything someone sent you that felt strange." data-fr="Fonctionne avec les messages WhatsApp transférés, SMS, e-mails ou tout message qui vous a semblé bizarre.">Works with WhatsApp forwards, SMS, emails, or anything someone sent you that felt strange.</p>
+      <p class="panel-label" style="margin-top:1rem;" data-en="Got a link too? Paste it here (optional)" data-fr="Vous avez aussi un lien ? Collez-le ici (facultatif)">Got a link too? Paste it here (optional)</p>
+      <input type="url" id="link-message" style="width:100%;border:1.5px solid var(--border);border-radius:var(--radius);padding:0.7rem 1rem;font-family:inherit;font-size:0.95rem;color:var(--text);background:#fafbfd;transition:border-color 0.2s;" data-placeholder-en="e.g. https://suspicious-site.net/verify" data-placeholder-fr="ex. https://site-suspect.net/verifier" placeholder="e.g. https://suspicious-site.net/verify">
       <div class="loading-msg" id="loading-message" data-en="Checking this message… give me a moment ⏳" data-fr="Analyse du message en cours… un instant ⏳">Checking this message… give me a moment ⏳</div>
       <div class="result-box" id="result-message">
         <div class="result-verdict"><span class="verdict-icon"></span><span class="verdict-label"></span></div>
         <div class="result-text"></div>
         <div class="result-tips"></div>
+        <button class="listen-btn" id="listen-message" onclick="readAloud('message')">
+          🔊 <span data-en="Read this aloud" data-fr="Lire à voix haute">Read this aloud</span>
+        </button>
       </div>
       <button class="check-btn" onclick="check('message')" data-en="Check this message →" data-fr="Vérifier ce message →">Check this message →</button>
     </div>
@@ -229,12 +275,21 @@
         data-placeholder-en="e.g. &quot;BREAKING: Scientists confirm 5G towers are secretly spreading a new virus&quot;"
         data-placeholder-fr="Ex. : « EXCLUSIF : Des scientifiques confirment que les antennes 5G propagent secrètement un virus »"
         placeholder="e.g. &quot;BREAKING: Scientists confirm 5G towers are secretly spreading a new virus&quot;"></textarea>
+      <button class="mic-btn" onclick="startListening('news')" id="mic-news">
+        <span class="mic-icon">🎤</span> <span data-en="Or speak the headline" data-fr="Ou dites le titre">Or speak the headline</span>
+      </button>
+      <p class="no-voice-msg" id="no-voice-news" data-en="Voice input not supported in this browser. Try Chrome or Safari." data-fr="Saisie vocale non supportée. Essayez Chrome ou Safari."></p>
       <p class="hint" data-en="Copy the headline or first paragraph of anything that surprised or alarmed you online." data-fr="Copiez le titre ou le premier paragraphe de tout article qui vous a surpris ou alarmé.">Copy the headline or first paragraph of anything that surprised or alarmed you online.</p>
+      <p class="panel-label" style="margin-top:1rem;" data-en="Got the article link? Paste it here (optional)" data-fr="Vous avez le lien de l'article ? Collez-le ici (facultatif)">Got the article link? Paste it here (optional)</p>
+      <input type="url" id="link-news" style="width:100%;border:1.5px solid var(--border);border-radius:var(--radius);padding:0.7rem 1rem;font-family:inherit;font-size:0.95rem;color:var(--text);background:#fafbfd;transition:border-color 0.2s;" data-placeholder-en="e.g. https://unknown-news-site.com/article" data-placeholder-fr="ex. https://site-inconnu.com/article" placeholder="e.g. https://unknown-news-site.com/article">
       <div class="loading-msg" id="loading-news" data-en="Analysing this headline… one moment ⏳" data-fr="Analyse du titre en cours… ⏳">Analysing this headline… one moment ⏳</div>
       <div class="result-box" id="result-news">
         <div class="result-verdict"><span class="verdict-icon"></span><span class="verdict-label"></span></div>
         <div class="result-text"></div>
         <div class="result-tips"></div>
+        <button class="listen-btn" id="listen-news" onclick="readAloud('news')">
+          🔊 <span data-en="Read this aloud" data-fr="Lire à voix haute">Read this aloud</span>
+        </button>
       </div>
       <button class="check-btn" onclick="check('news')" data-en="Check this headline →" data-fr="Vérifier ce titre →">Check this headline →</button>
     </div>
@@ -246,19 +301,97 @@
         data-placeholder-en="e.g. &quot;A photo showing a politician at a protest. Someone sent it claiming it proves he supports rioters.&quot;"
         data-placeholder-fr="Ex. : « Une photo montre un responsable politique à une fête alors que des inondations touchaient le pays. »"
         placeholder="e.g. &quot;A photo showing a politician at a protest. Someone sent it claiming it proves he supports rioters.&quot;"></textarea>
+      <button class="mic-btn" onclick="startListening('photo')" id="mic-photo">
+        <span class="mic-icon">🎤</span> <span data-en="Or describe it out loud" data-fr="Ou décrivez à voix haute">Or describe it out loud</span>
+      </button>
+      <p class="no-voice-msg" id="no-voice-photo" data-en="Voice input not supported in this browser. Try Chrome or Safari." data-fr="Saisie vocale non supportée. Essayez Chrome ou Safari."></p>
       <p class="hint" data-en="Describe who or what you see, what's being claimed about it, and where you received it." data-fr="Décrivez qui ou quoi vous voyez, ce qu'on prétend à son sujet, et d'où vient ce contenu.">Describe who or what you see, what's being claimed about it, and where you received it.</p>
+      <p class="panel-label" style="margin-top:1rem;" data-en="Got a link to the photo or post? Paste it here (optional)" data-fr="Vous avez un lien vers la photo ou la publication ? Collez-le ici (facultatif)">Got a link to the photo or post? Paste it here (optional)</p>
+      <input type="url" id="link-photo" style="width:100%;border:1.5px solid var(--border);border-radius:var(--radius);padding:0.7rem 1rem;font-family:inherit;font-size:0.95rem;color:var(--text);background:#fafbfd;transition:border-color 0.2s;" data-placeholder-en="e.g. https://facebook.com/post/..." data-placeholder-fr="ex. https://facebook.com/post/..." placeholder="e.g. https://facebook.com/post/...">
       <div class="loading-msg" id="loading-photo" data-en="Looking at the details you described… ⏳" data-fr="Analyse de la description en cours… ⏳">Looking at the details you described… ⏳</div>
       <div class="result-box" id="result-photo">
         <div class="result-verdict"><span class="verdict-icon"></span><span class="verdict-label"></span></div>
         <div class="result-text"></div>
         <div class="result-tips"></div>
+        <button class="listen-btn" id="listen-photo" onclick="readAloud('photo')">
+          🔊 <span data-en="Read this aloud" data-fr="Lire à voix haute">Read this aloud</span>
+        </button>
       </div>
       <button class="check-btn" onclick="check('photo')" data-en="Check this image claim →" data-fr="Vérifier cette image →">Check this image claim →</button>
     </div>
   </div>
 </section>
 
-<!-- HOW IT WORKS -->
+    <!-- CALL PANEL -->
+    <div class="panel" id="panel-call">
+      <p class="panel-label" data-en="Step 1 — Tick what happened during the call" data-fr="Étape 1 — Cochez ce qui s'est passé pendant l'appel">Step 1 — Tick what happened during the call</p>
+      <div class="checklist" id="call-checklist">
+        <label class="check-item">
+          <input type="checkbox" onchange="updateScore()">
+          <span data-en="They claimed to be from your bank, police, or a government agency" data-fr="Ils prétendaient venir de votre banque, de la police ou d'un organisme officiel">They claimed to be from your bank, police, or a government agency</span>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" onchange="updateScore()">
+          <span data-en="They said it was urgent — act now or something bad will happen" data-fr="Ils ont dit que c'était urgent — agissez maintenant ou quelque chose de grave arrivera">They said it was urgent — act now or something bad will happen</span>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" onchange="updateScore()">
+          <span data-en="They asked for your PIN, password, or card number" data-fr="Ils ont demandé votre code PIN, mot de passe ou numéro de carte">They asked for your PIN, password, or card number</span>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" onchange="updateScore()">
+          <span data-en="They asked you to transfer money or buy gift cards" data-fr="Ils vous ont demandé de transférer de l'argent ou d'acheter des cartes-cadeaux">They asked you to transfer money or buy gift cards</span>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" onchange="updateScore()">
+          <span data-en="They told you not to tell your family or friends about the call" data-fr="Ils vous ont dit de ne pas parler de cet appel à votre famille ou vos amis">They told you not to tell your family or friends about the call</span>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" onchange="updateScore()">
+          <span data-en="The voice sounded slightly robotic, or the audio quality was strange" data-fr="La voix semblait légèrement robotique ou la qualité audio était étrange">The voice sounded slightly robotic, or the audio quality was strange</span>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" onchange="updateScore()">
+          <span data-en="They already knew some personal details about you (name, address…)" data-fr="Ils connaissaient déjà des détails personnels vous concernant (nom, adresse…)">They already knew some personal details about you (name, address…)</span>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" onchange="updateScore()">
+          <span data-en="They asked you to stay on the line while you went to the bank or ATM" data-fr="Ils vous ont demandé de rester en ligne pendant que vous alliez à la banque ou au distributeur">They asked you to stay on the line while you went to the bank or ATM</span>
+        </label>
+      </div>
+
+      <div class="score-box" id="score-box" style="display:none;">
+        <div class="score-verdict" id="score-verdict"></div>
+        <p class="score-text" id="score-text"></p>
+        <button class="listen-btn" id="listen-call-score" onclick="readAloudScore()" style="margin-top:0.75rem;">
+          🔊 <span data-en="Read this aloud" data-fr="Lire à voix haute">Read this aloud</span>
+        </button>
+      </div>
+
+      <div style="border-top: 1px solid var(--border); margin: 1.5rem 0;"></div>
+
+      <p class="panel-label" data-en="Step 2 — Tell us more about the call (optional)" data-fr="Étape 2 — Dites-nous en plus sur l'appel (facultatif)">Step 2 — Tell us more about the call (optional)</p>
+      <textarea id="input-call"
+        data-placeholder-en="e.g. &quot;Someone called saying they were from my bank. They said my account was compromised and I needed to move my money to a safe account immediately.&quot;"
+        data-placeholder-fr="Ex. : « Quelqu'un a appelé en disant venir de ma banque. Ils ont dit que mon compte était compromis et que je devais transférer mon argent immédiatement. »"
+        placeholder="e.g. &quot;Someone called saying they were from my bank…&quot;"></textarea>
+      <button class="mic-btn" onclick="startListening('call')" id="mic-call">
+        <span class="mic-icon">🎤</span> <span data-en="Or describe the call out loud" data-fr="Ou décrivez l'appel à voix haute">Or describe the call out loud</span>
+      </button>
+      <p class="no-voice-msg" id="no-voice-call" data-en="Voice input not supported in this browser. Try Chrome or Safari." data-fr="Saisie vocale non supportée. Essayez Chrome ou Safari."></p>
+      <div class="loading-msg" id="loading-call" data-en="Analysing the call details… ⏳" data-fr="Analyse de l'appel en cours… ⏳">Analysing the call details… ⏳</div>
+      <div class="result-box" id="result-call">
+        <div class="result-verdict"><span class="verdict-icon"></span><span class="verdict-label"></span></div>
+        <div class="result-text"></div>
+        <div class="result-tips"></div>
+        <button class="listen-btn" id="listen-call" onclick="readAloud('call')">
+          🔊 <span data-en="Read this aloud" data-fr="Lire à voix haute">Read this aloud</span>
+        </button>
+      </div>
+      <button class="check-btn" onclick="check('call')" data-en="Get full analysis →" data-fr="Obtenir une analyse complète →">Get full analysis →</button>
+    </div>
+  </div>
+</section>
 <section class="section" id="how">
   <div class="container">
     <h2 class="section-title" data-en="How it works" data-fr="Comment ça marche">How it works</h2>
@@ -445,6 +578,10 @@
     document.querySelectorAll('textarea[data-placeholder-en]').forEach(el => {
       el.placeholder = el.getAttribute('data-placeholder-' + l) || '';
     });
+    // url input placeholders
+    document.querySelectorAll('input[type=url][data-placeholder-en]').forEach(el => {
+      el.placeholder = el.getAttribute('data-placeholder-' + l) || '';
+    });
 
     // dynamic sections
     renderExamples();
@@ -510,8 +647,8 @@ CONSEILS :
   };
 
   const TYPE_LABELS = {
-    en: { message: 'a message or email', news: 'a news headline or article excerpt', photo: 'a description of a photo or video' },
-    fr: { message: 'un message ou e-mail', news: 'un titre d\'actualité ou extrait d\'article', photo: 'une description de photo ou vidéo' }
+    en: { message: 'a message or email', news: 'a news headline or article excerpt', photo: 'a description of a photo or video', call: 'a suspicious phone call' },
+    fr: { message: 'un message ou e-mail', news: 'un titre d\'actualité ou extrait d\'article', photo: 'une description de photo ou vidéo', call: 'un appel téléphonique suspect' }
   };
 
   const VERDICTS = {
@@ -543,13 +680,16 @@ CONSEILS :
   async function check(type) {
     const input = document.getElementById('input-' + type).value.trim();
     if (!input) { alert(ALERT_MSG[lang]); return; }
+    const linkEl = document.getElementById('link-' + type);
+    const link = linkEl ? linkEl.value.trim() : '';
     const loading = document.getElementById('loading-' + type);
     const resultBox = document.getElementById('result-' + type);
     const btn = resultBox.closest('.panel').querySelector('.check-btn');
     resultBox.style.display = 'none'; loading.style.display = 'block'; btn.disabled = true;
+    const linkNote = link ? (lang === 'en' ? `\n\nThe user also provided this link: ${link}. Analyse the URL structure for red flags (suspicious domain, misleading path, unusual characters) — do not visit it.` : `\n\nL'utilisateur a aussi fourni ce lien : ${link}. Analyse la structure de l'URL pour détecter des signaux d'alerte (domaine suspect, chemin trompeur, caractères inhabituels) — ne le visite pas.`) : '';
     const userPrompt = lang === 'en'
-      ? `Please analyse this ${TYPE_LABELS.en[type]} and tell me if it's real, fake, or uncertain:\n\n"${input}"`
-      : `Analyse ce contenu (${TYPE_LABELS.fr[type]}) et dis-moi s'il est vrai, faux ou incertain :\n\n"${input}"`;
+      ? `Please analyse this ${TYPE_LABELS.en[type]} and tell me if it's real, fake, or uncertain:\n\n"${input}"${linkNote}`
+      : `Analyse ce contenu (${TYPE_LABELS.fr[type]}) et dis-moi s'il est vrai, faux ou incertain :\n\n"${input}"${linkNote}`;
     try {
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -591,7 +731,169 @@ CONSEILS :
     }
     resultBox.querySelector('.result-tips').innerHTML = tipsHtml;
     resultBox.style.display = 'block';
+    const listenBtn = document.getElementById('listen-' + type);
+    if (listenBtn) listenBtn.style.display = 'flex';
     resultBox.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  }
+
+  // ── CALL CHECKLIST ────────────────────────────────────────
+  const SCORES = {
+    en: {
+      0: { cls: 'safe',    verdict: '✅ Probably a genuine call',       text: 'None of the typical warning signs were present. That said, if something still felt off, trust your instinct and call the organisation back on their official number.' },
+      1: { cls: 'safe',    verdict: '✅ Likely genuine, but stay alert', text: 'Only one warning sign — probably fine, but worth double-checking by calling the organisation directly on their official number.' },
+      2: { cls: 'warning', verdict: '⚠️ Some red flags — be cautious',   text: 'Two warning signs were present. Do not give any more information. Hang up and call the organisation back using their official number — not the one the caller gave you.' },
+      3: { cls: 'warning', verdict: '⚠️ Several red flags — likely a scam', text: 'This has the hallmarks of a scam call. Do not transfer any money or give personal details. Hang up, contact your bank directly, and speak to a trusted family member.' },
+      high: { cls: 'danger', verdict: '🚨 Very likely a scam — act now',  text: 'Multiple serious warning signs. Do not do anything the caller asked. If you already shared information or transferred money, contact your bank immediately. Report the call to your national fraud authority.' }
+    },
+    fr: {
+      0: { cls: 'safe',    verdict: '✅ Probablement un appel authentique', text: 'Aucun signe d\'alerte typique n\'était présent. Cela dit, si quelque chose vous a semblé bizarre, faites confiance à votre instinct et rappelez l\'organisme sur son numéro officiel.' },
+      1: { cls: 'safe',    verdict: '✅ Probablement authentique, mais restez vigilant', text: 'Un seul signe d\'alerte — probablement sans danger, mais vérifiez en rappelant directement l\'organisme sur son numéro officiel.' },
+      2: { cls: 'warning', verdict: '⚠️ Quelques signaux d\'alerte — soyez prudent', text: 'Deux signaux d\'alerte étaient présents. Ne donnez plus d\'informations. Raccrochez et rappelez l\'organisme sur son numéro officiel — pas celui que l\'appelant vous a donné.' },
+      3: { cls: 'warning', verdict: '⚠️ Plusieurs signaux — probablement une arnaque', text: 'Cet appel présente les caractéristiques d\'une arnaque. Ne transférez pas d\'argent et ne donnez pas de données personnelles. Raccrochez et contactez directement votre banque.' },
+      high: { cls: 'danger', verdict: '🚨 Très probablement une arnaque — agissez maintenant', text: 'Plusieurs signaux d\'alerte graves. Ne faites rien de ce que l\'appelant vous a demandé. Si vous avez déjà partagé des informations ou transféré de l\'argent, contactez immédiatement votre banque et signalez l\'appel sur cybermalveillance.gouv.fr.' }
+    }
+  };
+
+  function updateScore() {
+    const boxes = document.querySelectorAll('#call-checklist input[type=checkbox]');
+    const count = [...boxes].filter(b => b.checked).length;
+    const scoreBox = document.getElementById('score-box');
+    const scoreVerdict = document.getElementById('score-verdict');
+    const scoreText = document.getElementById('score-text');
+    const listenBtn = document.getElementById('listen-call-score');
+
+    if (count === 0) { scoreBox.style.display = 'none'; return; }
+
+    const key = count >= 4 ? 'high' : count;
+    const s = SCORES[lang][key];
+    scoreBox.className = 'score-box ' + s.cls;
+    scoreVerdict.textContent = s.verdict;
+    scoreText.textContent = s.text;
+    scoreBox.style.display = 'block';
+    listenBtn.style.display = 'flex';
+  }
+
+  function readAloudScore() {
+    const scoreVerdict = document.getElementById('score-verdict').textContent;
+    const scoreText = document.getElementById('score-text').textContent;
+    const listenBtn = document.getElementById('listen-call-score');
+    const fullText = `${scoreVerdict}. ${scoreText}`;
+
+    if (currentSpeech) {
+      window.speechSynthesis.cancel();
+      currentSpeech = null;
+      listenBtn.classList.remove('speaking');
+      listenBtn.querySelector('span').textContent = lang === 'fr' ? 'Lire à voix haute' : 'Read this aloud';
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(fullText);
+    utterance.lang = lang === 'fr' ? 'fr-FR' : 'en-GB';
+    utterance.rate = 0.9;
+    currentSpeech = utterance;
+    listenBtn.classList.add('speaking');
+    listenBtn.querySelector('span').textContent = lang === 'fr' ? '⏹ Arrêter' : '⏹ Stop reading';
+    utterance.onend = () => {
+      listenBtn.classList.remove('speaking');
+      listenBtn.querySelector('span').textContent = lang === 'fr' ? 'Lire à voix haute' : 'Read this aloud';
+      currentSpeech = null;
+    };
+    window.speechSynthesis.speak(utterance);
+  }
+
+  // ── VOICE ─────────────────────────────────────────────────
+  let currentRecognition = null;
+  let currentSpeech = null;
+
+  function startListening(type) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const micBtn = document.getElementById('mic-' + type);
+    const noVoice = document.getElementById('no-voice-' + type);
+
+    if (!SpeechRecognition) {
+      noVoice.style.display = 'block';
+      return;
+    }
+
+    // if already listening, stop
+    if (currentRecognition) {
+      currentRecognition.stop();
+      currentRecognition = null;
+      micBtn.classList.remove('listening');
+      micBtn.querySelector('span:last-child').setAttribute('data-en', 'Or speak your message');
+      applyLang(lang);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = lang === 'fr' ? 'fr-FR' : 'en-GB';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    currentRecognition = recognition;
+
+    micBtn.classList.add('listening');
+    const spanEl = micBtn.querySelector('span[data-en]');
+    spanEl.textContent = lang === 'fr' ? '🔴 Parlez maintenant…' : '🔴 Listening… tap to stop';
+
+    recognition.onresult = (e) => {
+      const transcript = e.results[0][0].transcript;
+      const textarea = document.getElementById('input-' + type);
+      textarea.value = textarea.value ? textarea.value + ' ' + transcript : transcript;
+      micBtn.classList.remove('listening');
+      spanEl.setAttribute('data-en', 'Or speak your message');
+      spanEl.setAttribute('data-fr', 'Ou parlez votre message');
+      applyLang(lang);
+      currentRecognition = null;
+    };
+
+    recognition.onerror = () => {
+      micBtn.classList.remove('listening');
+      applyLang(lang);
+      currentRecognition = null;
+    };
+
+    recognition.onend = () => {
+      micBtn.classList.remove('listening');
+      applyLang(lang);
+      currentRecognition = null;
+    };
+
+    recognition.start();
+  }
+
+  function readAloud(type) {
+    const resultBox = document.getElementById('result-' + type);
+    const listenBtn = document.getElementById('listen-' + type);
+    const verdict = resultBox.querySelector('.verdict-label').textContent;
+    const explanation = resultBox.querySelector('.result-text').textContent;
+    const tipsItems = [...resultBox.querySelectorAll('.result-tips li')].map(li => li.textContent).join('. ');
+    const fullText = `${verdict}. ${explanation}${tipsItems ? '. ' + tipsItems : ''}`;
+
+    // if already speaking, stop
+    if (currentSpeech) {
+      window.speechSynthesis.cancel();
+      currentSpeech = null;
+      listenBtn.classList.remove('speaking');
+      listenBtn.querySelector('span').textContent = lang === 'fr' ? 'Lire à voix haute' : 'Read this aloud';
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(fullText);
+    utterance.lang = lang === 'fr' ? 'fr-FR' : 'en-GB';
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+
+    listenBtn.classList.add('speaking');
+    listenBtn.querySelector('span').textContent = lang === 'fr' ? '⏹ Arrêter' : '⏹ Stop reading';
+    currentSpeech = utterance;
+
+    utterance.onend = () => {
+      listenBtn.classList.remove('speaking');
+      listenBtn.querySelector('span').textContent = lang === 'fr' ? 'Lire à voix haute' : 'Read this aloud';
+      currentSpeech = null;
+    };
+
+    window.speechSynthesis.speak(utterance);
   }
 
   // ── INIT ──────────────────────────────────────────────────
