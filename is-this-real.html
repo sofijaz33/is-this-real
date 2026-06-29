@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Is This Real? — Spot AI fakes before they fool you</title>
+<meta name="description" content="Paste any suspicious message, news headline, or describe a photo. We'll tell you plainly: real, likely fake, or uncertain — and why.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy: #1a2744;
+    --navy-light: #253660;
+    --sky: #e8f2ff;
+    --sky-mid: #c4daf8;
+    --real-green: #1a6b3a;
+    --real-bg: #e8f5ee;
+    --real-border: #a8d8bc;
+    --fake-red: #8b1a1a;
+    --fake-bg: #fdeaea;
+    --fake-border: #f0b4b4;
+    --unsure-amber: #7a4f00;
+    --unsure-bg: #fff8e6;
+    --unsure-border: #f5d98a;
+    --text: #1c1c1c;
+    --text-mid: #4a4a4a;
+    --text-soft: #707070;
+    --bg: #f7f9fc;
+    --white: #ffffff;
+    --border: #d8dde8;
+    --radius: 14px;
+    --shadow: 0 2px 16px rgba(26,39,68,0.09);
+  }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 17px;
+    line-height: 1.65;
+    min-height: 100vh;
+  }
+
+  /* ── NAV ── */
+  nav {
+    background: var(--navy);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-logo {
+    font-family: 'Lora', Georgia, serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #fff;
+    text-decoration: none;
+    letter-spacing: -0.01em;
+  }
+  .nav-logo span { color: #88b8ff; }
+  nav a.nav-link {
+    color: #b8cbf0;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  nav a.nav-link:hover { color: #fff; }
+  .nav-links { display: flex; gap: 2rem; align-items: center; }
+
+  /* ── HERO ── */
+  .hero {
+    background: linear-gradient(160deg, var(--navy) 0%, var(--navy-light) 100%);
+    color: #fff;
+    text-align: center;
+    padding: 5rem 2rem 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 110%, rgba(136,184,255,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-eyebrow {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #88b8ff;
+    margin-bottom: 1.2rem;
+  }
+  .hero h1 {
+    font-family: 'Lora', Georgia, serif;
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    font-weight: 600;
+    line-height: 1.15;
+    margin-bottom: 1.2rem;
+    letter-spacing: -0.02em;
+  }
+  .hero h1 em {
+    font-style: italic;
+    color: #88b8ff;
+  }
+  .hero-sub {
+    font-size: 1.15rem;
+    color: #b8cbf0;
+    max-width: 520px;
+    margin: 0 auto 2.5rem;
+    line-height: 1.7;
+  }
+  .hero-badges {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .badge {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 999px;
+    padding: 0.35rem 1rem;
+    font-size: 0.85rem;
+    color: #d4e3ff;
+  }
+
+  /* ── MAIN CONTAINER ── */
+  .container {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  /* ── TOOL SECTION ── */
+  .tool-section {
+    margin: -2rem auto 0;
+    max-width: 780px;
+    padding: 0 1.5rem 4rem;
+  }
+  .tool-card {
+    background: var(--white);
+    border-radius: 20px;
+    box-shadow: var(--shadow), 0 0 0 1px rgba(26,39,68,0.07);
+    overflow: hidden;
+  }
+
+  /* tabs */
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: #f0f4fb;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 1rem 0.5rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-soft);
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  .tab-btn.active {
+    color: var(--navy);
+    border-bottom-color: var(--navy);
+    background: var(--white);
+  }
+  .tab-btn:hover:not(.active) { color: var(--navy-light); background: rgba(255,255,255,0.6); }
+
+  .tab-icon { font-size: 1.2rem; }
+
+  /* panels */
+  .panel { display: none; padding: 2rem; }
+  .panel.active { display: block; }
+
+  .panel-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-soft);
+    margin-bottom: 0.6rem;
+  }
+  .panel textarea {
+    width: 100%;
+    min-height: 140px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.1rem;
+    font-family: inherit;
+    font-size: 1rem;
+    color: var(--text);
+    resize: vertical;
+    line-height: 1.6;
+    transition: border-color 0.2s;
+    background: #fafbfd;
+  }
+  .panel textarea:focus {
+    outline: none;
+    border-color: var(--navy);
+    background: var(--white);
+  }
+  .panel textarea::placeholder { color: #aab; }
+
+  .hint {
+    font-size: 0.85rem;
+    color: var(--text-soft);
+    margin-top: 0.5rem;
+    line-height: 1.5;
+  }
+
+  .check-btn {
+    display: block;
+    width: 100%;
+    margin-top: 1.25rem;
+    padding: 1rem;
+    background: var(--navy);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-family: inherit;
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.01em;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .check-btn:hover { background: var(--navy-light); }
+  .check-btn:active { transform: scale(0.99); }
+  .check-btn:disabled { background: #9aa; cursor: not-allowed; }
+
+  /* result */
+  .result-box {
+    display: none;
+    margin-top: 1.5rem;
+    border-radius: var(--radius);
+    padding: 1.4rem 1.5rem;
+    border: 1.5px solid;
+    animation: fadeIn 0.35s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .result-box.real { background: var(--real-bg); border-color: var(--real-border); }
+  .result-box.fake { background: var(--fake-bg); border-color: var(--fake-border); }
+  .result-box.unsure { background: var(--unsure-bg); border-color: var(--unsure-border); }
+
+  .result-verdict {
+    font-size: 1.3rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.75rem;
+  }
+  .result-box.real .result-verdict { color: var(--real-green); }
+  .result-box.fake .result-verdict { color: var(--fake-red); }
+  .result-box.unsure .result-verdict { color: var(--unsure-amber); }
+
+  .verdict-icon { font-size: 1.5rem; }
+  .result-text { color: var(--text-mid); line-height: 1.7; font-size: 0.98rem; }
+  .result-tips { margin-top: 1rem; }
+  .result-tips h4 { font-size: 0.85rem; font-weight: 600; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 0.4rem; }
+  .result-tips ul { padding-left: 1.2rem; color: var(--text-mid); font-size: 0.92rem; line-height: 1.8; }
+
+  .loading-msg {
+    display: none;
+    text-align: center;
+    padding: 1.5rem;
+    color: var(--text-soft);
+    font-size: 0.95rem;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+
+  /* ── HOW IT WORKS ── */
+  .section { padding: 4rem 0; }
+  .section-title {
+    font-family: 'Lora', Georgia, serif;
+    font-size: 1.9rem;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 0.5rem;
+  }
+  .section-sub { color: var(--text-soft); margin-bottom: 2.5rem; }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+  }
+  .step-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+  }
+  .step-num {
+    width: 36px; height: 36px;
+    background: var(--navy);
+    color: #fff;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+  .step-card h3 { font-size: 1rem; font-weight: 600; color: var(--navy); margin-bottom: 0.4rem; }
+  .step-card p { font-size: 0.9rem; color: var(--text-soft); line-height: 1.6; }
+
+  /* ── EXAMPLES ── */
+  .examples-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  .example-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.2rem;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .example-card:hover {
+    border-color: var(--navy);
+    box-shadow: 0 2px 10px rgba(26,39,68,0.1);
+  }
+  .example-tag {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .example-tag.msg { color: #1a5a99; }
+  .example-tag.news { color: #6b1a99; }
+  .example-tag.photo { color: #1a6b3a; }
+  .example-card p { font-size: 0.88rem; color: var(--text-mid); line-height: 1.55; }
+  .example-cta { font-size: 0.8rem; color: var(--navy); font-weight: 500; margin-top: 0.6rem; }
+
+  /* ── TIPS ── */
+  .tips-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+  }
+  .tip-card {
+    border-left: 4px solid var(--sky-mid);
+    background: var(--white);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 1.2rem 1.4rem;
+  }
+  .tip-card h3 { font-size: 1rem; font-weight: 600; color: var(--navy); margin-bottom: 0.35rem; }
+  .tip-card p { font-size: 0.88rem; color: var(--text-soft); line-height: 1.6; }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--navy);
+    color: #b8cbf0;
+    text-align: center;
+    padding: 2.5rem 2rem;
+    font-size: 0.85rem;
+    line-height: 1.8;
+  }
+  footer a { color: #88b8ff; text-decoration: none; }
+  footer strong { color: #fff; }
+
+  /* ── FAQ ── */
+  .faq-list { max-width: 720px; margin: 0 auto; }
+  details {
+    border-bottom: 1px solid var(--border);
+    padding: 0;
+  }
+  details:first-of-type { border-top: 1px solid var(--border); }
+  summary {
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: var(--navy);
+    padding: 1.2rem 2rem 1.2rem 0;
+    cursor: pointer;
+    list-style: none;
+    position: relative;
+    line-height: 1.5;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::after {
+    content: '+';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.4rem;
+    font-weight: 300;
+    color: var(--text-soft);
+    transition: transform 0.2s;
+  }
+  details[open] summary::after { content: '−'; }
+  .faq-answer {
+    padding: 0 0 1.2rem;
+    color: var(--text-mid);
+    font-size: 0.95rem;
+    line-height: 1.8;
+    max-width: 640px;
+  }
+  .faq-answer p + p { margin-top: 0.75rem; }
+  .faq-answer ul { padding-left: 1.2rem; margin-top: 0.5rem; }
+  .faq-answer li { margin-bottom: 0.4rem; }
+
+  /* ── PRIVACY NOTICE ── */
+  .privacy-notice {
+    background: var(--sky);
+    border: 1px solid var(--sky-mid);
+    border-radius: var(--radius);
+    padding: 1.2rem 1.5rem;
+    font-size: 0.88rem;
+    color: var(--text-mid);
+    line-height: 1.7;
+    max-width: 720px;
+    margin: 0 auto 3rem;
+  }
+  .privacy-notice strong { color: var(--navy); }
+
+  /* ── SCROLL ANCHOR ── */
+  html { scroll-behavior: smooth; }
+
+  @media (max-width: 600px) {
+    .hero { padding: 3.5rem 1.25rem 3rem; }
+    .panel { padding: 1.5rem; }
+    .tab-btn { font-size: 0.82rem; padding: 0.85rem 0.3rem; }
+    .tab-icon { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">Is This <span>Real?</span></a>
+  <div class="nav-links">
+    <a class="nav-link" href="#tool">Check something</a>
+    <a class="nav-link" href="#tips">How to spot fakes</a>
+    <a class="nav-link" href="#faq">FAQ</a>
+    <a class="nav-link" href="#about">About</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <p class="hero-eyebrow">Free · No sign-up · Powered by AI</p>
+  <h1>Is this message<br><em>real or fake?</em></h1>
+  <p class="hero-sub">Paste a suspicious WhatsApp message, a news headline, or describe a photo. We'll tell you plainly — and explain why.</p>
+  <div class="hero-badges">
+    <span class="badge">💬 WhatsApp messages</span>
+    <span class="badge">📰 News headlines</span>
+    <span class="badge">🖼 Suspicious photos</span>
+    <span class="badge">📞 Voice call claims</span>
+  </div>
+</section>
+
+<!-- TOOL -->
+<section class="tool-section" id="tool">
+  <div class="tool-card">
+    <div class="tabs" role="tablist">
+      <button class="tab-btn active" role="tab" onclick="switchTab(this, 'message')" aria-selected="true">
+        <span class="tab-icon">💬</span> Message or email
+      </button>
+      <button class="tab-btn" role="tab" onclick="switchTab(this, 'news')" aria-selected="false">
+        <span class="tab-icon">📰</span> News headline
+      </button>
+      <button class="tab-btn" role="tab" onclick="switchTab(this, 'photo')" aria-selected="false">
+        <span class="tab-icon">🖼</span> Photo or video
+      </button>
+    </div>
+
+    <!-- MESSAGE PANEL -->
+    <div class="panel active" id="panel-message">
+      <p class="panel-label">Paste the message here</p>
+      <textarea id="input-message" placeholder="e.g. &quot;Your bank account has been locked. Click here immediately to verify your identity or lose access: www.secure-bank-verify.net&quot;"></textarea>
+      <p class="hint">Works with WhatsApp forwards, SMS, emails, or anything someone sent you that felt strange.</p>
+      <div class="loading-msg" id="loading-message">Checking this message… give me a moment ⏳</div>
+      <div class="result-box" id="result-message">
+        <div class="result-verdict"><span class="verdict-icon"></span><span class="verdict-label"></span></div>
+        <div class="result-text"></div>
+        <div class="result-tips"></div>
+      </div>
+      <button class="check-btn" onclick="check('message')">Check this message →</button>
+    </div>
+
+    <!-- NEWS PANEL -->
+    <div class="panel" id="panel-news">
+      <p class="panel-label">Paste a headline or short article excerpt</p>
+      <textarea id="input-news" placeholder="e.g. &quot;BREAKING: Scientists confirm 5G towers are secretly spreading a new virus — governments hiding the truth&quot;"></textarea>
+      <p class="hint">Copy the headline or first paragraph of anything that surprised or alarmed you online.</p>
+      <div class="loading-msg" id="loading-news">Analysing this headline… one moment ⏳</div>
+      <div class="result-box" id="result-news">
+        <div class="result-verdict"><span class="verdict-icon"></span><span class="verdict-label"></span></div>
+        <div class="result-text"></div>
+        <div class="result-tips"></div>
+      </div>
+      <button class="check-btn" onclick="check('news')">Check this headline →</button>
+    </div>
+
+    <!-- PHOTO PANEL -->
+    <div class="panel" id="panel-photo">
+      <p class="panel-label">Describe what you see in the photo or video</p>
+      <textarea id="input-photo" placeholder="e.g. &quot;A photo showing a famous politician at a protest holding a sign. Someone sent it on WhatsApp saying it proves he supports the rioters.&quot;"></textarea>
+      <p class="hint">Describe who or what you see, what's being claimed about it, and where you received it.</p>
+      <div class="loading-msg" id="loading-photo">Looking at the details you described… ⏳</div>
+      <div class="result-box" id="result-photo">
+        <div class="result-verdict"><span class="verdict-icon"></span><span class="verdict-label"></span></div>
+        <div class="result-text"></div>
+        <div class="result-tips"></div>
+      </div>
+      <button class="check-btn" onclick="check('photo')">Check this image claim →</button>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section" id="how">
+  <div class="container">
+    <h2 class="section-title">How it works</h2>
+    <p class="section-sub">No tech knowledge needed. Three steps, plain results.</p>
+    <div class="steps">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <h3>Paste what worried you</h3>
+        <p>Copy the message, headline, or describe the photo. No account needed.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <h3>We check the signals</h3>
+        <p>Our AI looks at language patterns, urgency tricks, and known misinformation tactics.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <h3>Plain English answer</h3>
+        <p>You get a clear verdict — Real, Likely Fake, or Uncertain — explained like a friend would explain it.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EXAMPLES -->
+<section class="section" style="background: var(--sky); padding: 3rem 0;" id="examples">
+  <div class="container">
+    <h2 class="section-title">Try an example</h2>
+    <p class="section-sub">Click any card to load a real-world example into the checker.</p>
+    <div class="examples-grid">
+      <div class="example-card" onclick="loadExample('message', 'URGENT: Your parcel could not be delivered. Pay the €2.50 redelivery fee within 24 hours or it will be returned: parcel-eu-redelivery.net/pay')">
+        <p class="example-tag msg">💬 WhatsApp</p>
+        <p>"URGENT: Your parcel could not be delivered. Pay the €2.50 fee within 24 hours…"</p>
+        <p class="example-cta">Try this example →</p>
+      </div>
+      <div class="example-card" onclick="loadExample('news', 'EXCLUSIVE: Doctors confirm that drinking warm lemon water every morning completely prevents cancer, but pharmaceutical companies are suppressing this information.')">
+        <p class="example-tag news">📰 Health claim</p>
+        <p>"Doctors confirm warm lemon water prevents cancer — but pharma companies are hiding it"</p>
+        <p class="example-cta">Try this example →</p>
+      </div>
+      <div class="example-card" onclick="loadExample('photo', 'A video is circulating showing what appears to be the French President at a luxury party last week, dancing and drinking. The caption says he was partying while Paris flooded. It was sent to me by a family member on WhatsApp.')">
+        <p class="example-tag photo">🖼 Viral photo</p>
+        <p>"Video of a politician partying while a disaster was happening — sent on family WhatsApp"</p>
+        <p class="example-cta">Try this example →</p>
+      </div>
+      <div class="example-card" onclick="loadExample('message', 'Hi grandma, it\'s me! I\'m in trouble — I had an accident abroad and I need you to send €500 urgently via Western Union. Please don\'t tell mum and dad yet. I love you.')">
+        <p class="example-tag msg">📞 Family scam</p>
+        <p>"Hi grandma, it's me! I had an accident abroad and need you to send €500 urgently…"</p>
+        <p class="example-cta">Try this example →</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TIPS -->
+<section class="section" id="tips">
+  <div class="container">
+    <h2 class="section-title">5 signs something might be fake</h2>
+    <p class="section-sub">Learn to spot the tricks — even without our tool.</p>
+    <div class="tips-grid">
+      <div class="tip-card">
+        <h3>It makes you panic</h3>
+        <p>Scammers want you to act before you think. "Urgent!", "24 hours", "or else" — these are pressure tactics.</p>
+      </div>
+      <div class="tip-card">
+        <h3>The link looks almost right</h3>
+        <p>"paypa1.com" not "paypal.com". One wrong letter is all it takes. Always hover before you click.</p>
+      </div>
+      <div class="tip-card">
+        <h3>No one else is reporting it</h3>
+        <p>Real big news appears in multiple known outlets. If only one site is publishing it, be sceptical.</p>
+      </div>
+      <div class="tip-card">
+        <h3>It was forwarded many times</h3>
+        <p>WhatsApp labels heavily-forwarded messages. The more it's been passed around, the less you can trust it.</p>
+      </div>
+      <div class="tip-card">
+        <h3>It asks you to keep a secret</h3>
+        <p>"Don't tell anyone" is a classic manipulation tactic. Legitimate services never ask for secrecy.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="section" style="background: var(--white);" id="about">
+  <div class="container" style="max-width:600px; text-align:center;">
+    <h2 class="section-title">Why we built this</h2>
+    <p style="color: var(--text-mid); line-height:1.8; margin-bottom: 1rem;">
+      AI-generated content is spreading faster than ever — fake voices, fake faces, fake news. Everyone is at risk, but older adults are targeted most often by sophisticated scams.
+    </p>
+    <p style="color: var(--text-mid); line-height:1.8; margin-bottom: 1rem;">
+      This tool was built on a simple belief: everyone, regardless of age or tech skills, deserves to navigate the internet safely.
+    </p>
+    <p style="color: var(--text-soft); font-size:0.88rem; line-height:1.7;">
+      This tool is AI-assisted and not infallible. When in doubt, always check with a trusted person or an official source directly (e.g. call your bank's official number).
+    </p>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="section" id="faq" style="background: var(--bg);">
+  <div class="container">
+    <h2 class="section-title">Frequently asked questions</h2>
+    <p class="section-sub">Answers to the most common questions about spotting AI fakes, scams, and misinformation.</p>
+
+    <div class="privacy-notice">
+      <strong>Privacy notice:</strong> Text you submit is sent to Anthropic's API for analysis and is not stored by us. No account, no cookies, no tracking. For Anthropic's data practices, see <a href="https://www.anthropic.com/privacy" target="_blank">anthropic.com/privacy</a>.
+    </div>
+
+    <div class="faq-list">
+
+      <details>
+        <summary>How can I tell if a photo has been generated by AI?</summary>
+        <div class="faq-answer">
+          <p>AI-generated images often have telltale signs if you look closely: hands with too many or too few fingers, ears that don't match, text in the background that is blurry or nonsensical, and lighting that doesn't behave naturally — for example, shadows falling in opposite directions. Backgrounds can also look soft or strangely repetitive.</p>
+          <p>The fastest check: describe what you see in our tool above and we'll flag the warning signs for you.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>How do I know if a WhatsApp message is a scam?</summary>
+        <div class="faq-answer">
+          <p>Most WhatsApp scams share the same playbook. Watch for these red flags:</p>
+          <ul>
+            <li>Urgency — "act within 24 hours or lose access"</li>
+            <li>A link that looks almost right but isn't (e.g. "paypa1.com")</li>
+            <li>Requests for money, gift cards, or personal information</li>
+            <li>A "family member in trouble" asking you not to tell anyone</li>
+            <li>Messages forwarded many times (WhatsApp labels these)</li>
+          </ul>
+          <p>When in doubt, paste the message into our checker above — it will give you a plain-English verdict in seconds.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>Can AI fake someone's voice in a phone call?</summary>
+        <div class="faq-answer">
+          <p>Yes — and this is one of the fastest-growing scams targeting older adults. With just a few seconds of someone's real voice (taken from a video or voicemail), AI tools can clone it convincingly. Fraudsters then call family members pretending to be a grandchild, child, or friend in distress.</p>
+          <p>If you receive an unexpected call from a "family member" asking for money urgently, hang up and call them back on their known number. Establish a family code word that only real family members know.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>What is a deepfake and how can I spot one?</summary>
+        <div class="faq-answer">
+          <p>A deepfake is a video or image in which a real person's face or voice has been replaced by AI. They are used to spread false statements attributed to politicians, celebrities, or public figures — or to impersonate ordinary people.</p>
+          <p>Signs of a deepfake video include: unnatural blinking or no blinking at all, edges around the face that shimmer or blur slightly, voice that doesn't quite match the lip movements, and lighting on the face that differs from the background. Always check whether a reputable news source is reporting the same event before sharing.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>How do I check if a news story is fake?</summary>
+        <div class="faq-answer">
+          <p>The fastest method: search the headline in a search engine. If the story is real, multiple well-known outlets will report it. If only one unknown website carries it, be very sceptical.</p>
+          <p>Also check the date — old stories are often recirculated with a new date to make them seem current. Look for an author name and see if that person exists. And watch for emotional language designed to outrage rather than inform. You can also paste the headline into our tool above for an instant assessment.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>Is this tool free? Do I need to create an account?</summary>
+        <div class="faq-answer">
+          <p>Completely free, no account required, no sign-up. Simply paste your text and click check. We don't store anything you submit.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>Can this tool be wrong?</summary>
+        <div class="faq-answer">
+          <p>Yes — no AI tool is 100% accurate, and ours is no exception. It is designed to help you think critically, not to replace your own judgement. If the tool says something looks real but you still feel uneasy, trust your instinct and verify through an official channel — call your bank directly, check the official government website, or ask a trusted person.</p>
+          <p>Think of this tool as a second opinion, not a final answer.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>What should I do if I already clicked a suspicious link or sent money?</summary>
+        <div class="faq-answer">
+          <p>Act quickly but calmly:</p>
+          <ul>
+            <li><strong>Clicked a link:</strong> do not enter any personal information on the page that opened. Close the browser, run your device's security scan, and change passwords for important accounts.</li>
+            <li><strong>Gave personal information:</strong> contact your bank immediately and explain what happened. They can flag your account for suspicious activity.</li>
+            <li><strong>Sent money:</strong> contact your bank or transfer service right away — the sooner you act, the better the chance of recovery. Report the scam to your national consumer protection authority.</li>
+          </ul>
+        </div>
+      </details>
+
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p><strong>Is This Real?</strong> — A digital safety tool for everyone</p>
+  <p style="margin-top:0.5rem;">No personal data stored · Free to use · No cookies</p>
+  <p style="margin-top:0.5rem; font-size:0.8rem;">This tool is for educational purposes. Always verify important information through official channels.</p>
+</footer>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How can I tell if a photo has been generated by AI?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "AI-generated images often show signs like hands with too many or too few fingers, ears that don't match, blurry or nonsensical background text, and unnatural lighting. The fastest check is to describe the image in our tool — it will flag the warning signs for you."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I know if a WhatsApp message is a scam?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Most WhatsApp scams use urgency, suspicious links, requests for money or personal information, and pressure not to tell others. When in doubt, paste the message into our checker for a plain-English verdict."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can AI fake someone's voice in a phone call?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. With just a few seconds of real audio, AI can clone someone's voice convincingly. If you receive an unexpected call from a family member asking for money urgently, hang up and call them back on their known number. Establish a family code word only real members know."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is a deepfake and how can I spot one?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A deepfake is a video or image where a person's face or voice has been replaced by AI. Signs include unnatural blinking, blurring around the face, voice not matching lip movements, and inconsistent lighting. Always check whether a reputable news source reports the same event."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I check if a news story is fake?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Search the headline — real news appears across multiple known outlets. Check the date, look for an author name, and watch for emotional language designed to outrage rather than inform. You can also paste the headline into our tool for an instant assessment."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is this tool free? Do I need to create an account?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Completely free, no account required. Simply paste your text and click check. We do not store anything you submit."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can this tool be wrong?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes — no AI tool is 100% accurate. It is designed to help you think critically, not replace your own judgement. Think of it as a second opinion, not a final answer."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What should I do if I already clicked a suspicious link or sent money?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Act quickly: if you clicked a link, close the browser and change your passwords. If you gave personal information, contact your bank immediately. If you sent money, contact your bank or transfer service right away and report the scam to your national consumer protection authority."
+      }
+    }
+  ]
+}
+</script>
+
+<script>
+  const SYSTEM_PROMPT = `You are a plain-language AI detection assistant helping elderly and non-tech-savvy users determine if content is real, AI-generated, or a scam.
+
+Your job: analyse what the user shares and give a verdict in THREE parts:
+1. VERDICT: one of exactly these words: REAL, LIKELY FAKE, or UNCERTAIN
+2. EXPLANATION: 2-3 sentences in very plain, warm language — like a trusted friend explaining it, not a tech expert. Avoid jargon. Be direct but kind.
+3. TIPS: 2-3 short bullet points the user can act on right now.
+
+Format your response EXACTLY like this, with these exact headers:
+VERDICT: [word]
+EXPLANATION: [your explanation]
+TIPS:
+• [tip 1]
+• [tip 2]
+• [tip 3]
+
+Be honest but never alarmist. If something is clearly a scam, say so plainly. If it seems genuine, reassure them. Never be vague when you're confident.`;
+
+  function switchTab(btn, panelId) {
+    document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    btn.setAttribute('aria-selected','true');
+    document.getElementById('panel-' + panelId).classList.add('active');
+  }
+
+  function loadExample(type, text) {
+    const tabMap = { message: 0, news: 1, photo: 2 };
+    const tabs = document.querySelectorAll('.tab-btn');
+    tabs[tabMap[type]].click();
+    setTimeout(() => {
+      document.getElementById('input-' + type).value = text;
+      document.getElementById('input-' + type).focus();
+    }, 50);
+    document.getElementById('tool').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  async function check(type) {
+    const input = document.getElementById('input-' + type).value.trim();
+    if (!input) {
+      alert('Please paste or type something first.');
+      return;
+    }
+
+    const loading = document.getElementById('loading-' + type);
+    const resultBox = document.getElementById('result-' + type);
+    const btn = resultBox.closest('.panel').querySelector('.check-btn');
+
+    resultBox.style.display = 'none';
+    loading.style.display = 'block';
+    btn.disabled = true;
+
+    const typeLabels = {
+      message: 'a message or email',
+      news: 'a news headline or article excerpt',
+      photo: 'a description of a photo or video'
+    };
+
+    const userPrompt = `Please analyse this ${typeLabels[type]} and tell me if it's real, fake, or uncertain:\n\n"${input}"`;
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 1000,
+          system: SYSTEM_PROMPT,
+          messages: [{ role: 'user', content: userPrompt }]
+        })
+      });
+
+      const data = await res.json();
+      const raw = data.content?.[0]?.text || '';
+      renderResult(type, raw);
+    } catch (e) {
+      loading.style.display = 'none';
+      btn.disabled = false;
+      resultBox.className = 'result-box unsure';
+      resultBox.style.display = 'block';
+      resultBox.querySelector('.verdict-icon').textContent = '⚠️';
+      resultBox.querySelector('.verdict-label').textContent = 'Could not connect';
+      resultBox.querySelector('.result-text').textContent = 'Something went wrong connecting to our server. Please check your internet and try again.';
+      resultBox.querySelector('.result-tips').innerHTML = '';
+    }
+  }
+
+  function renderResult(type, raw) {
+    const loading = document.getElementById('loading-' + type);
+    const resultBox = document.getElementById('result-' + type);
+    const btn = resultBox.closest('.panel').querySelector('.check-btn');
+
+    loading.style.display = 'none';
+    btn.disabled = false;
+
+    const verdictMatch = raw.match(/VERDICT:\s*(REAL|LIKELY FAKE|UNCERTAIN)/i);
+    const explanationMatch = raw.match(/EXPLANATION:\s*([\s\S]*?)(?=TIPS:|$)/i);
+    const tipsMatch = raw.match(/TIPS:\s*([\s\S]*?)$/i);
+
+    const verdict = verdictMatch ? verdictMatch[1].toUpperCase() : 'UNCERTAIN';
+    const explanation = explanationMatch ? explanationMatch[1].trim() : raw;
+    const tipsRaw = tipsMatch ? tipsMatch[1].trim() : '';
+
+    const config = {
+      'REAL': { cls: 'real', icon: '✅', label: 'Looks real' },
+      'LIKELY FAKE': { cls: 'fake', icon: '🚨', label: 'Likely fake or a scam' },
+      'UNCERTAIN': { cls: 'unsure', icon: '🤔', label: 'Hard to say — stay cautious' }
+    };
+    const { cls, icon, label } = config[verdict] || config['UNCERTAIN'];
+
+    resultBox.className = 'result-box ' + cls;
+    resultBox.querySelector('.verdict-icon').textContent = icon;
+    resultBox.querySelector('.verdict-label').textContent = label;
+    resultBox.querySelector('.result-text').textContent = explanation;
+
+    let tipsHtml = '';
+    if (tipsRaw) {
+      const tips = tipsRaw.split('\n').filter(l => l.trim().startsWith('•') || l.trim().startsWith('-'));
+      if (tips.length) {
+        tipsHtml = '<div class="result-tips"><h4>What to do now</h4><ul>' +
+          tips.map(t => `<li>${t.replace(/^[•\-]\s*/, '')}</li>`).join('') +
+          '</ul></div>';
+      }
+    }
+    resultBox.querySelector('.result-tips').innerHTML = tipsHtml;
+    resultBox.style.display = 'block';
+    resultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+</script>
+</body>
+</html>

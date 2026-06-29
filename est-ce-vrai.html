@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Est-ce Vrai ? — Repérez les faux avant qu'ils vous trompent</title>
+<meta name="description" content="Collez un message suspect, un titre d'actualité ou décrivez une photo. On vous dit clairement : vrai, probablement faux, ou incertain — et pourquoi.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy: #1a2744;
+    --navy-light: #253660;
+    --sky: #e8f2ff;
+    --sky-mid: #c4daf8;
+    --real-green: #1a6b3a;
+    --real-bg: #e8f5ee;
+    --real-border: #a8d8bc;
+    --fake-red: #8b1a1a;
+    --fake-bg: #fdeaea;
+    --fake-border: #f0b4b4;
+    --unsure-amber: #7a4f00;
+    --unsure-bg: #fff8e6;
+    --unsure-border: #f5d98a;
+    --text: #1c1c1c;
+    --text-mid: #4a4a4a;
+    --text-soft: #707070;
+    --bg: #f7f9fc;
+    --white: #ffffff;
+    --border: #d8dde8;
+    --radius: 14px;
+    --shadow: 0 2px 16px rgba(26,39,68,0.09);
+  }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 17px;
+    line-height: 1.65;
+    min-height: 100vh;
+  }
+
+  nav {
+    background: var(--navy);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-logo {
+    font-family: 'Lora', Georgia, serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #fff;
+    text-decoration: none;
+    letter-spacing: -0.01em;
+  }
+  .nav-logo span { color: #88b8ff; }
+  nav a.nav-link {
+    color: #b8cbf0;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  nav a.nav-link:hover { color: #fff; }
+  .nav-links { display: flex; gap: 2rem; align-items: center; }
+
+  .hero {
+    background: linear-gradient(160deg, var(--navy) 0%, var(--navy-light) 100%);
+    color: #fff;
+    text-align: center;
+    padding: 5rem 2rem 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 110%, rgba(136,184,255,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-eyebrow {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #88b8ff;
+    margin-bottom: 1.2rem;
+  }
+  .hero h1 {
+    font-family: 'Lora', Georgia, serif;
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    font-weight: 600;
+    line-height: 1.15;
+    margin-bottom: 1.2rem;
+    letter-spacing: -0.02em;
+  }
+  .hero h1 em { font-style: italic; color: #88b8ff; }
+  .hero-sub {
+    font-size: 1.15rem;
+    color: #b8cbf0;
+    max-width: 520px;
+    margin: 0 auto 2.5rem;
+    line-height: 1.7;
+  }
+  .hero-badges {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .badge {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 999px;
+    padding: 0.35rem 1rem;
+    font-size: 0.85rem;
+    color: #d4e3ff;
+  }
+
+  .container { max-width: 780px; margin: 0 auto; padding: 0 1.5rem; }
+
+  .tool-section { margin: -2rem auto 0; max-width: 780px; padding: 0 1.5rem 4rem; }
+  .tool-card {
+    background: var(--white);
+    border-radius: 20px;
+    box-shadow: var(--shadow), 0 0 0 1px rgba(26,39,68,0.07);
+    overflow: hidden;
+  }
+
+  .tabs { display: flex; border-bottom: 1px solid var(--border); background: #f0f4fb; }
+  .tab-btn {
+    flex: 1;
+    padding: 1rem 0.5rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-soft);
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  .tab-btn.active { color: var(--navy); border-bottom-color: var(--navy); background: var(--white); }
+  .tab-btn:hover:not(.active) { color: var(--navy-light); background: rgba(255,255,255,0.6); }
+  .tab-icon { font-size: 1.2rem; }
+
+  .panel { display: none; padding: 2rem; }
+  .panel.active { display: block; }
+
+  .panel-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-soft);
+    margin-bottom: 0.6rem;
+  }
+  .panel textarea {
+    width: 100%;
+    min-height: 140px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.1rem;
+    font-family: inherit;
+    font-size: 1rem;
+    color: var(--text);
+    resize: vertical;
+    line-height: 1.6;
+    transition: border-color 0.2s;
+    background: #fafbfd;
+  }
+  .panel textarea:focus { outline: none; border-color: var(--navy); background: var(--white); }
+  .panel textarea::placeholder { color: #aab; }
+
+  .hint { font-size: 0.85rem; color: var(--text-soft); margin-top: 0.5rem; line-height: 1.5; }
+
+  .check-btn {
+    display: block;
+    width: 100%;
+    margin-top: 1.25rem;
+    padding: 1rem;
+    background: var(--navy);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-family: inherit;
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.01em;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .check-btn:hover { background: var(--navy-light); }
+  .check-btn:active { transform: scale(0.99); }
+  .check-btn:disabled { background: #9aa; cursor: not-allowed; }
+
+  .result-box {
+    display: none;
+    margin-top: 1.5rem;
+    border-radius: var(--radius);
+    padding: 1.4rem 1.5rem;
+    border: 1.5px solid;
+    animation: fadeIn 0.35s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .result-box.real { background: var(--real-bg); border-color: var(--real-border); }
+  .result-box.fake { background: var(--fake-bg); border-color: var(--fake-border); }
+  .result-box.unsure { background: var(--unsure-bg); border-color: var(--unsure-border); }
+
+  .result-verdict {
+    font-size: 1.3rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.75rem;
+  }
+  .result-box.real .result-verdict { color: var(--real-green); }
+  .result-box.fake .result-verdict { color: var(--fake-red); }
+  .result-box.unsure .result-verdict { color: var(--unsure-amber); }
+
+  .verdict-icon { font-size: 1.5rem; }
+  .result-text { color: var(--text-mid); line-height: 1.7; font-size: 0.98rem; }
+  .result-tips { margin-top: 1rem; }
+  .result-tips h4 { font-size: 0.85rem; font-weight: 600; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 0.4rem; }
+  .result-tips ul { padding-left: 1.2rem; color: var(--text-mid); font-size: 0.92rem; line-height: 1.8; }
+
+  .loading-msg {
+    display: none;
+    text-align: center;
+    padding: 1.5rem;
+    color: var(--text-soft);
+    font-size: 0.95rem;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+
+  .section { padding: 4rem 0; }
+  .section-title {
+    font-family: 'Lora', Georgia, serif;
+    font-size: 1.9rem;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 0.5rem;
+  }
+  .section-sub { color: var(--text-soft); margin-bottom: 2.5rem; }
+
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; }
+  .step-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; }
+  .step-num {
+    width: 36px; height: 36px;
+    background: var(--navy); color: #fff;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+  .step-card h3 { font-size: 1rem; font-weight: 600; color: var(--navy); margin-bottom: 0.4rem; }
+  .step-card p { font-size: 0.9rem; color: var(--text-soft); line-height: 1.6; }
+
+  .examples-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 1rem; }
+  .example-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.2rem;
+    cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .example-card:hover { border-color: var(--navy); box-shadow: 0 2px 10px rgba(26,39,68,0.1); }
+  .example-tag { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.5rem; }
+  .example-tag.msg { color: #1a5a99; }
+  .example-tag.news { color: #6b1a99; }
+  .example-tag.photo { color: #1a6b3a; }
+  .example-card p { font-size: 0.88rem; color: var(--text-mid); line-height: 1.55; }
+  .example-cta { font-size: 0.8rem; color: var(--navy); font-weight: 500; margin-top: 0.6rem; }
+
+  .tips-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+  .tip-card { border-left: 4px solid var(--sky-mid); background: var(--white); border-radius: 0 var(--radius) var(--radius) 0; padding: 1.2rem 1.4rem; }
+  .tip-card h3 { font-size: 1rem; font-weight: 600; color: var(--navy); margin-bottom: 0.35rem; }
+  .tip-card p { font-size: 0.88rem; color: var(--text-soft); line-height: 1.6; }
+
+  /* Lang switcher */
+  .lang-switch {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 999px;
+    padding: 0.3rem 0.9rem;
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background 0.2s;
+  }
+  .lang-switch:hover { background: rgba(255,255,255,0.25); }
+
+  footer { background: var(--navy); color: #b8cbf0; text-align: center; padding: 2.5rem 2rem; font-size: 0.85rem; line-height: 1.8; }
+  footer a { color: #88b8ff; text-decoration: none; }
+  footer strong { color: #fff; }
+  /* ── FAQ ── */
+  .faq-list { max-width: 720px; margin: 0 auto; }
+  details { border-bottom: 1px solid var(--border); padding: 0; }
+  details:first-of-type { border-top: 1px solid var(--border); }
+  summary {
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: var(--navy);
+    padding: 1.2rem 2rem 1.2rem 0;
+    cursor: pointer;
+    list-style: none;
+    position: relative;
+    line-height: 1.5;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::after {
+    content: '+';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.4rem;
+    font-weight: 300;
+    color: var(--text-soft);
+  }
+  details[open] summary::after { content: '−'; }
+  .faq-answer {
+    padding: 0 0 1.2rem;
+    color: var(--text-mid);
+    font-size: 0.95rem;
+    line-height: 1.8;
+    max-width: 640px;
+  }
+  .faq-answer p + p { margin-top: 0.75rem; }
+  .faq-answer ul { padding-left: 1.2rem; margin-top: 0.5rem; }
+  .faq-answer li { margin-bottom: 0.4rem; }
+
+  /* ── PRIVACY NOTICE ── */
+  .privacy-notice {
+    background: var(--sky);
+    border: 1px solid var(--sky-mid);
+    border-radius: var(--radius);
+    padding: 1.2rem 1.5rem;
+    font-size: 0.88rem;
+    color: var(--text-mid);
+    line-height: 1.7;
+    max-width: 720px;
+    margin: 0 auto 3rem;
+  }
+  .privacy-notice strong { color: var(--navy); }
+
+  html { scroll-behavior: smooth; }
+
+  @media (max-width: 600px) {
+    .hero { padding: 3.5rem 1.25rem 3rem; }
+    .panel { padding: 1.5rem; }
+    .tab-btn { font-size: 0.82rem; padding: 0.85rem 0.3rem; }
+    .tab-icon { display: none; }
+    .nav-links .nav-link { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="#">Est-ce <span>Vrai ?</span></a>
+  <div class="nav-links">
+    <a class="nav-link" href="#outil">Vérifier</a>
+    <a class="nav-link" href="#conseils">Repérer les faux</a>
+    <a class="nav-link" href="#faq">FAQ</a>
+    <a class="nav-link" href="#apropos">À propos</a>
+    <a class="lang-switch" href="is-this-real.html">🇬🇧 English</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <p class="hero-eyebrow">Gratuit · Sans inscription · Propulsé par l'IA</p>
+  <h1>Ce message est-il<br><em>vrai ou faux ?</em></h1>
+  <p class="hero-sub">Collez un message WhatsApp suspect, un titre d'actualité ou décrivez une photo. On vous répond clairement — et on vous explique pourquoi.</p>
+  <div class="hero-badges">
+    <span class="badge">💬 Messages WhatsApp</span>
+    <span class="badge">📰 Titres d'actualité</span>
+    <span class="badge">🖼 Photos suspectes</span>
+    <span class="badge">📞 Arnaques téléphoniques</span>
+  </div>
+</section>
+
+<section class="tool-section" id="outil">
+  <div class="tool-card">
+    <div class="tabs" role="tablist">
+      <button class="tab-btn active" role="tab" onclick="switchTab(this, 'message')" aria-selected="true">
+        <span class="tab-icon">💬</span> Message ou e-mail
+      </button>
+      <button class="tab-btn" role="tab" onclick="switchTab(this, 'actualite')" aria-selected="false">
+        <span class="tab-icon">📰</span> Titre d'actualité
+      </button>
+      <button class="tab-btn" role="tab" onclick="switchTab(this, 'photo')" aria-selected="false">
+        <span class="tab-icon">🖼</span> Photo ou vidéo
+      </button>
+    </div>
+
+    <!-- MESSAGE -->
+    <div class="panel active" id="panel-message">
+      <p class="panel-label">Collez le message ici</p>
+      <textarea id="input-message" placeholder="Ex. : « Votre compte bancaire a été suspendu. Cliquez ici immédiatement pour vérifier votre identité : www.credit-agricole-secure-verify.net »"></textarea>
+      <p class="hint">Fonctionne avec les messages WhatsApp transférés, SMS, e-mails ou tout message reçu qui vous a semblé bizarre.</p>
+      <div class="loading-msg" id="loading-message">Analyse du message en cours… un instant ⏳</div>
+      <div class="result-box" id="result-message">
+        <div class="result-verdict"><span class="verdict-icon"></span><span class="verdict-label"></span></div>
+        <div class="result-text"></div>
+        <div class="result-tips"></div>
+      </div>
+      <button class="check-btn" onclick="check('message')">Vérifier ce message →</button>
+    </div>
+
+    <!-- ACTUALITÉ -->
+    <div class="panel" id="panel-actualite">
+      <p class="panel-label">Collez un titre ou un extrait d'article</p>
+      <textarea id="input-actualite" placeholder="Ex. : « EXCLUSIF : Des scientifiques confirment que les antennes 5G propagent secrètement un nouveau virus — les gouvernements cachent la vérité »"></textarea>
+      <p class="hint">Copiez le titre ou le premier paragraphe de tout article qui vous a surpris ou alarmé.</p>
+      <div class="loading-msg" id="loading-actualite">Analyse du titre en cours… ⏳</div>
+      <div class="result-box" id="result-actualite">
+        <div class="result-verdict"><span class="verdict-icon"></span><span class="verdict-label"></span></div>
+        <div class="result-text"></div>
+        <div class="result-tips"></div>
+      </div>
+      <button class="check-btn" onclick="check('actualite')">Vérifier ce titre →</button>
+    </div>
+
+    <!-- PHOTO -->
+    <div class="panel" id="panel-photo">
+      <p class="panel-label">Décrivez ce que vous voyez sur la photo ou vidéo</p>
+      <textarea id="input-photo" placeholder="Ex. : « Une photo montre Emmanuel Macron à une fête de luxe alors que des inondations touchaient le sud de la France. Quelqu'un me l'a envoyée sur WhatsApp en disant qu'il s'en fichait des victimes. »"></textarea>
+      <p class="hint">Décrivez qui ou quoi vous voyez, ce qu'on prétend à son sujet, et d'où vient ce contenu.</p>
+      <div class="loading-msg" id="loading-photo">Analyse de la description en cours… ⏳</div>
+      <div class="result-box" id="result-photo">
+        <div class="result-verdict"><span class="verdict-icon"></span><span class="verdict-label"></span></div>
+        <div class="result-text"></div>
+        <div class="result-tips"></div>
+      </div>
+      <button class="check-btn" onclick="check('photo')">Vérifier cette image →</button>
+    </div>
+  </div>
+</section>
+
+<!-- COMMENT ÇA MARCHE -->
+<section class="section" id="comment">
+  <div class="container">
+    <h2 class="section-title">Comment ça marche</h2>
+    <p class="section-sub">Pas besoin de connaissances techniques. Trois étapes, une réponse claire.</p>
+    <div class="steps">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <h3>Collez ce qui vous inquiète</h3>
+        <p>Copiez le message, le titre, ou décrivez la photo. Aucun compte requis.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <h3>On analyse les signaux</h3>
+        <p>Notre IA repère les tournures alarmistes, les tactiques de manipulation et les schémas de désinformation connus.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <h3>Réponse en français clair</h3>
+        <p>Vous obtenez un verdict clair — Vrai, Probablement faux ou Incertain — expliqué simplement, comme le ferait un ami de confiance.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EXEMPLES -->
+<section class="section" style="background: var(--sky); padding: 3rem 0;" id="exemples">
+  <div class="container">
+    <h2 class="section-title">Essayez un exemple</h2>
+    <p class="section-sub">Cliquez sur une carte pour charger un exemple réel dans l'outil.</p>
+    <div class="examples-grid">
+      <div class="example-card" onclick="loadExample('message', 'URGENT : Votre colis n\'a pas pu être livré. Veuillez régler les frais de réexpédition de 1,99 € dans les 24 heures sous peine de retour à l\'expéditeur : colissimo-relivraison-secure.net/payer')">
+        <p class="example-tag msg">💬 SMS / WhatsApp</p>
+        <p>« URGENT : Votre colis n'a pas pu être livré. Réglez 1,99 € dans les 24 heures… »</p>
+        <p class="example-cta">Essayer cet exemple →</p>
+      </div>
+      <div class="example-card" onclick="loadExample('actualite', 'EXCLUSIF : Des médecins confirment que boire de l\'eau chaude citronnée chaque matin prévient complètement le cancer, mais les laboratoires pharmaceutiques suppriment cette information.')">
+        <p class="example-tag news">📰 Santé</p>
+        <p>« Des médecins confirment que l'eau citronnée prévient le cancer — les labos cachent tout »</p>
+        <p class="example-cta">Essayer cet exemple →</p>
+      </div>
+      <div class="example-card" onclick="loadExample('photo', 'Une vidéo circule montrant ce qui semble être le Président en train de faire la fête dans un restaurant de luxe la semaine dernière. La légende dit qu\'il festoyait pendant que des inondations dévastaient le sud de la France. Elle m\'a été envoyée par un membre de ma famille sur WhatsApp.')">
+        <p class="example-tag photo">🖼 Vidéo virale</p>
+        <p>« Vidéo d'un responsable politique en fête pendant une catastrophe — reçue en famille sur WhatsApp »</p>
+        <p class="example-cta">Essayer cet exemple →</p>
+      </div>
+      <div class="example-card" onclick="loadExample('message', 'Mamie, c\'est moi ! J\'ai eu un accident à l\'étranger et j\'ai besoin que tu m\'envoies 600 € en urgence par virement. S\'il te plaît, ne le dis pas encore à maman et papa. Je t\'aime.')">
+        <p class="example-tag msg">📞 Arnaque familiale</p>
+        <p>« Mamie, c'est moi ! J'ai eu un accident et j'ai besoin de 600 € en urgence… »</p>
+        <p class="example-cta">Essayer cet exemple →</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONSEILS -->
+<section class="section" id="conseils">
+  <div class="container">
+    <h2 class="section-title">5 signes qu'un contenu est peut-être faux</h2>
+    <p class="section-sub">Apprenez à repérer les astuces — même sans notre outil.</p>
+    <div class="tips-grid">
+      <div class="tip-card">
+        <h3>Ça vous fait paniquer</h3>
+        <p>Les escrocs veulent que vous agissiez avant de réfléchir. « Urgent ! », « 24 heures », « sinon… » — ce sont des tactiques de pression.</p>
+      </div>
+      <div class="tip-card">
+        <h3>Le lien ressemble à un vrai, mais pas tout à fait</h3>
+        <p>« credit-agricoIe.fr » au lieu de « credit-agricole.fr » — une seule lettre suffit. Regardez bien avant de cliquer.</p>
+      </div>
+      <div class="tip-card">
+        <h3>Personne d'autre n'en parle</h3>
+        <p>Une vraie grande nouvelle apparaît dans plusieurs sources connues. Si un seul site en parle, soyez sceptique.</p>
+      </div>
+      <div class="tip-card">
+        <h3>Le message a été transféré de nombreuses fois</h3>
+        <p>WhatsApp signale les messages très transférés. Plus un message circule, moins il est fiable.</p>
+      </div>
+      <div class="tip-card">
+        <h3>On vous demande de garder le secret</h3>
+        <p>« Ne le dis à personne » est une tactique de manipulation classique. Les services légitimes ne demandent jamais le secret.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- À PROPOS -->
+<section class="section" style="background: var(--white);" id="apropos">
+  <div class="container" style="max-width:600px; text-align:center;">
+    <h2 class="section-title">Pourquoi cet outil existe</h2>
+    <p style="color: var(--text-mid); line-height:1.8; margin-bottom: 1rem;">
+      Les contenus générés par l'IA se répandent plus vite que jamais — fausses voix, faux visages, fausses nouvelles. Tout le monde est concerné, mais les personnes âgées sont les premières ciblées par des arnaques de plus en plus sophistiquées.
+    </p>
+    <p style="color: var(--text-mid); line-height:1.8; margin-bottom: 1rem;">
+      Cet outil repose sur une conviction simple : chacun, quel que soit son âge ou ses compétences numériques, mérite de naviguer sur Internet en sécurité.
+    </p>
+    <p style="color: var(--text-soft); font-size:0.88rem; line-height:1.7;">
+      Cet outil est assisté par l'IA et n'est pas infaillible. En cas de doute, vérifiez toujours auprès d'une personne de confiance ou d'une source officielle (par exemple, appelez directement votre banque avec son numéro officiel).
+    </p>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="section" id="faq" style="background: var(--bg);">
+  <div class="container">
+    <h2 class="section-title">Questions fréquentes</h2>
+    <p class="section-sub">Réponses aux questions les plus courantes sur les faux générés par l'IA, les arnaques et la désinformation.</p>
+
+    <div class="privacy-notice">
+      <strong>Avis de confidentialité :</strong> Le texte que vous soumettez est envoyé à l'API d'Anthropic pour analyse et n'est pas stocké par nous. Aucun compte, aucun cookie, aucun suivi. Pour les pratiques de données d'Anthropic, consultez <a href="https://www.anthropic.com/privacy" target="_blank">anthropic.com/privacy</a>.
+    </div>
+
+    <div class="faq-list">
+
+      <details>
+        <summary>Comment savoir si une photo a été générée par une IA ?</summary>
+        <div class="faq-answer">
+          <p>Les images générées par IA présentent souvent des indices révélateurs : des mains avec trop ou trop peu de doigts, des oreilles asymétriques, du texte flou ou sans sens en arrière-plan, et un éclairage qui ne se comporte pas naturellement — par exemple des ombres qui tombent dans des directions opposées. Les arrière-plans peuvent aussi sembler mous ou étrangement répétitifs.</p>
+          <p>La vérification la plus rapide : décrivez ce que vous voyez dans notre outil ci-dessus et il signalera les signes d'alerte pour vous.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>Comment savoir si un message WhatsApp est une arnaque ?</summary>
+        <div class="faq-answer">
+          <p>La plupart des arnaques WhatsApp suivent le même schéma. Méfiez-vous de ces signaux d'alarme :</p>
+          <ul>
+            <li>L'urgence — « agissez dans les 24 heures ou perdez l'accès »</li>
+            <li>Un lien qui ressemble à un vrai mais qui ne l'est pas (ex. : « credit-agricoIe.fr »)</li>
+            <li>Des demandes d'argent, de cartes-cadeaux ou d'informations personnelles</li>
+            <li>Un « membre de la famille en danger » qui vous demande de n'en parler à personne</li>
+            <li>Des messages transférés de nombreuses fois (WhatsApp les signale)</li>
+          </ul>
+          <p>En cas de doute, collez le message dans notre vérificateur ci-dessus — il vous donnera un verdict clair en quelques secondes.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>L'IA peut-elle imiter la voix de quelqu'un lors d'un appel téléphonique ?</summary>
+        <div class="faq-answer">
+          <p>Oui — et c'est l'une des arnaques qui se développe le plus vite, ciblant particulièrement les personnes âgées. Avec seulement quelques secondes de la vraie voix de quelqu'un (extraite d'une vidéo ou d'un message vocal), les outils d'IA peuvent la cloner de manière convaincante. Des fraudeurs appellent ensuite des membres de la famille en se faisant passer pour un petit-enfant, un enfant ou un ami en détresse.</p>
+          <p>Si vous recevez un appel inattendu d'un « membre de la famille » demandant de l'argent en urgence, raccrochez et rappelez-le sur son numéro habituel. Établissez un mot de code familial que seuls les vrais membres connaissent.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>Qu'est-ce qu'un deepfake et comment le repérer ?</summary>
+        <div class="faq-answer">
+          <p>Un deepfake est une vidéo ou une image dans laquelle le visage ou la voix d'une vraie personne a été remplacé par une IA. Ils sont utilisés pour diffuser de fausses déclarations attribuées à des politiciens, des célébrités ou des personnalités publiques.</p>
+          <p>Les signes d'un deepfake vidéo incluent : un clignement des yeux anormal ou absent, des contours du visage qui scintillent légèrement, une voix qui ne correspond pas tout à fait aux mouvements des lèvres, et un éclairage du visage différent de l'arrière-plan. Vérifiez toujours si une source d'information reconnue rapporte le même événement avant de partager.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>Comment vérifier si une information est fausse ?</summary>
+        <div class="faq-answer">
+          <p>La méthode la plus rapide : recherchez le titre sur un moteur de recherche. Si l'information est réelle, plusieurs sources connues en feront état. Si un seul site inconnu la publie, soyez très sceptique.</p>
+          <p>Vérifiez aussi la date — les vieilles informations sont souvent remises en circulation avec une nouvelle date. Cherchez le nom de l'auteur et vérifiez s'il existe. Méfiez-vous du langage émotionnel conçu pour indigner plutôt qu'informer. Vous pouvez aussi coller le titre dans notre outil pour une évaluation instantanée.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>Cet outil est-il gratuit ? Faut-il créer un compte ?</summary>
+        <div class="faq-answer">
+          <p>Entièrement gratuit, sans compte requis, sans inscription. Collez simplement votre texte et cliquez sur vérifier. Nous ne stockons rien de ce que vous soumettez.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>Cet outil peut-il se tromper ?</summary>
+        <div class="faq-answer">
+          <p>Oui — aucun outil d'IA n'est fiable à 100 %, et le nôtre ne fait pas exception. Il est conçu pour vous aider à réfléchir de manière critique, pas pour remplacer votre propre jugement. Si l'outil dit que quelque chose semble réel mais que vous ressentez encore de l'inquiétude, faites confiance à votre instinct et vérifiez auprès d'une source officielle.</p>
+          <p>Considérez cet outil comme un deuxième avis, pas comme une réponse définitive.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>Que faire si j'ai déjà cliqué sur un lien suspect ou envoyé de l'argent ?</summary>
+        <div class="faq-answer">
+          <p>Agissez rapidement mais calmement :</p>
+          <ul>
+            <li><strong>Vous avez cliqué sur un lien :</strong> ne saisissez aucune information personnelle sur la page qui s'est ouverte. Fermez le navigateur, lancez une analyse de sécurité et changez vos mots de passe importants.</li>
+            <li><strong>Vous avez donné des informations personnelles :</strong> contactez immédiatement votre banque et expliquez la situation. Elle peut signaler votre compte pour toute activité suspecte.</li>
+            <li><strong>Vous avez envoyé de l'argent :</strong> contactez votre banque ou le service de transfert immédiatement — plus vous agissez tôt, meilleures sont les chances de récupération. Signalez l'arnaque à la DGCCRF ou à cybermalveillance.gouv.fr.</li>
+          </ul>
+        </div>
+      </details>
+
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p><strong>Est-ce Vrai ?</strong> — Un outil de sécurité numérique pour tous</p>
+  <p style="margin-top:0.5rem;">Aucune donnée personnelle stockée · Gratuit · Sans cookies</p>
+  <p style="margin-top:0.5rem; font-size:0.8rem;">Cet outil est fourni à titre éducatif. Vérifiez toujours les informations importantes auprès de sources officielles.</p>
+</footer>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Comment savoir si une photo a été générée par une IA ?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Les images générées par IA présentent souvent des doigts mal formés, des oreilles asymétriques, du texte flou en arrière-plan et un éclairage incohérent. Décrivez l'image dans notre outil pour une vérification instantanée."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Comment savoir si un message WhatsApp est une arnaque ?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Méfiez-vous de l'urgence, des liens suspects, des demandes d'argent ou d'informations personnelles, et des demandes de garder le secret. Collez le message dans notre vérificateur pour un verdict immédiat."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "L'IA peut-elle imiter la voix de quelqu'un lors d'un appel téléphonique ?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Oui. Avec quelques secondes d'audio réel, l'IA peut cloner une voix de manière convaincante. Si un membre de la famille appelle pour demander de l'argent en urgence, raccrochez et rappelez sur son numéro habituel. Établissez un mot de code familial."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Qu'est-ce qu'un deepfake et comment le repérer ?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Un deepfake est une vidéo ou image où le visage ou la voix d'une personne a été remplacé par une IA. Signes : clignement anormal, contours flous, voix ne correspondant pas aux lèvres, éclairage incohérent. Vérifiez toujours auprès de sources reconnues."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Comment vérifier si une information est fausse ?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Recherchez le titre — une vraie information apparaît sur plusieurs sources connues. Vérifiez la date, l'auteur et méfiez-vous du langage émotionnel. Collez le titre dans notre outil pour une évaluation instantanée."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Cet outil est-il gratuit ? Faut-il créer un compte ?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Entièrement gratuit, sans compte requis. Collez simplement votre texte et cliquez sur vérifier. Nous ne stockons rien de ce que vous soumettez."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Cet outil peut-il se tromper ?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Oui — aucun outil d'IA n'est fiable à 100 %. Il est conçu pour vous aider à réfléchir, pas pour remplacer votre jugement. Considérez-le comme un deuxième avis, pas une réponse définitive."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Que faire si j'ai déjà cliqué sur un lien suspect ou envoyé de l'argent ?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Agissez vite : si vous avez cliqué un lien, fermez le navigateur et changez vos mots de passe. Si vous avez donné des informations, contactez votre banque immédiatement. Si vous avez envoyé de l'argent, contactez votre banque et signalez l'arnaque sur cybermalveillance.gouv.fr."
+      }
+    }
+  ]
+}
+</script>
+
+<script>
+  const SYSTEM_PROMPT = `Tu es un assistant de détection IA en langage simple, conçu pour aider les personnes âgées et non-technophiles à déterminer si un contenu est réel, généré par IA, ou une arnaque.
+
+Ta mission : analyser ce que l'utilisateur partage et donner un verdict en TROIS parties :
+1. VERDICT : exactement l'un de ces mots : VRAI, PROBABLEMENT FAUX, ou INCERTAIN
+2. EXPLICATION : 2 à 3 phrases en langage très simple et bienveillant — comme un ami de confiance qui explique, pas un expert en technologie. Pas de jargon. Sois direct mais gentil.
+3. CONSEILS : 2 à 3 courtes puces sur ce que l'utilisateur peut faire maintenant.
+
+Formate ta réponse EXACTEMENT ainsi, avec ces en-têtes exacts :
+VERDICT : [mot]
+EXPLICATION : [ton explication]
+CONSEILS :
+• [conseil 1]
+• [conseil 2]
+• [conseil 3]
+
+Sois honnête mais jamais alarmiste. Si quelque chose est clairement une arnaque, dis-le clairement. Si ça semble authentique, rassure la personne. Ne sois jamais vague quand tu es sûr.`;
+
+  function switchTab(btn, panelId) {
+    document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    btn.setAttribute('aria-selected','true');
+    document.getElementById('panel-' + panelId).classList.add('active');
+  }
+
+  function loadExample(type, text) {
+    const tabMap = { message: 0, actualite: 1, photo: 2 };
+    const tabs = document.querySelectorAll('.tab-btn');
+    tabs[tabMap[type]].click();
+    setTimeout(() => {
+      document.getElementById('input-' + type).value = text;
+      document.getElementById('input-' + type).focus();
+    }, 50);
+    document.getElementById('outil').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  async function check(type) {
+    const input = document.getElementById('input-' + type).value.trim();
+    if (!input) { alert('Veuillez d\'abord coller ou écrire quelque chose.'); return; }
+
+    const loading = document.getElementById('loading-' + type);
+    const resultBox = document.getElementById('result-' + type);
+    const btn = resultBox.closest('.panel').querySelector('.check-btn');
+
+    resultBox.style.display = 'none';
+    loading.style.display = 'block';
+    btn.disabled = true;
+
+    const typeLabels = {
+      message: 'un message ou e-mail',
+      actualite: 'un titre d\'actualité ou extrait d\'article',
+      photo: 'une description de photo ou vidéo'
+    };
+
+    const userPrompt = `Analyse ce contenu (${typeLabels[type]}) et dis-moi s'il est vrai, faux ou incertain :\n\n"${input}"`;
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 1000,
+          system: SYSTEM_PROMPT,
+          messages: [{ role: 'user', content: userPrompt }]
+        })
+      });
+
+      const data = await res.json();
+      const raw = data.content?.[0]?.text || '';
+      renderResult(type, raw);
+    } catch (e) {
+      loading.style.display = 'none';
+      btn.disabled = false;
+      resultBox.className = 'result-box unsure';
+      resultBox.style.display = 'block';
+      resultBox.querySelector('.verdict-icon').textContent = '⚠️';
+      resultBox.querySelector('.verdict-label').textContent = 'Connexion impossible';
+      resultBox.querySelector('.result-text').textContent = 'Une erreur s\'est produite lors de la connexion. Vérifiez votre connexion Internet et réessayez.';
+      resultBox.querySelector('.result-tips').innerHTML = '';
+    }
+  }
+
+  function renderResult(type, raw) {
+    const loading = document.getElementById('loading-' + type);
+    const resultBox = document.getElementById('result-' + type);
+    const btn = resultBox.closest('.panel').querySelector('.check-btn');
+
+    loading.style.display = 'none';
+    btn.disabled = false;
+
+    const verdictMatch = raw.match(/VERDICT\s*:\s*(VRAI|PROBABLEMENT FAUX|INCERTAIN)/i);
+    const explanationMatch = raw.match(/EXPLICATION\s*:\s*([\s\S]*?)(?=CONSEILS\s*:|$)/i);
+    const tipsMatch = raw.match(/CONSEILS\s*:\s*([\s\S]*?)$/i);
+
+    const verdict = verdictMatch ? verdictMatch[1].toUpperCase() : 'INCERTAIN';
+    const explanation = explanationMatch ? explanationMatch[1].trim() : raw;
+    const tipsRaw = tipsMatch ? tipsMatch[1].trim() : '';
+
+    const config = {
+      'VRAI': { cls: 'real', icon: '✅', label: 'Semble authentique' },
+      'PROBABLEMENT FAUX': { cls: 'fake', icon: '🚨', label: 'Probablement faux ou une arnaque' },
+      'INCERTAIN': { cls: 'unsure', icon: '🤔', label: 'Difficile à dire — restez prudent' }
+    };
+    const { cls, icon, label } = config[verdict] || config['INCERTAIN'];
+
+    resultBox.className = 'result-box ' + cls;
+    resultBox.querySelector('.verdict-icon').textContent = icon;
+    resultBox.querySelector('.verdict-label').textContent = label;
+    resultBox.querySelector('.result-text').textContent = explanation;
+
+    let tipsHtml = '';
+    if (tipsRaw) {
+      const tips = tipsRaw.split('\n').filter(l => l.trim().startsWith('•') || l.trim().startsWith('-'));
+      if (tips.length) {
+        tipsHtml = '<div class="result-tips"><h4>Que faire maintenant</h4><ul>' +
+          tips.map(t => `<li>${t.replace(/^[•\-]\s*/, '')}</li>`).join('') +
+          '</ul></div>';
+      }
+    }
+    resultBox.querySelector('.result-tips').innerHTML = tipsHtml;
+    resultBox.style.display = 'block';
+    resultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+</script>
+</body>
+</html>
