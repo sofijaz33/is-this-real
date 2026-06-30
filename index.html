@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clarifaux — Spot AI fakes / Repérez les faux</title>
+<meta name="description" content="Paste a suspicious message, news headline, or describe a photo. We'll tell you plainly: real, likely fake, or uncertain. / Collez un message suspect et découvrez s'il est vrai ou faux.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy: #1a2744; --navy-light: #253660;
+    --sky: #e8f2ff; --sky-mid: #c4daf8;
+    --real-green: #1a6b3a; --real-bg: #e8f5ee; --real-border: #a8d8bc;
+    --fake-red: #8b1a1a; --fake-bg: #fdeaea; --fake-border: #f0b4b4;
+    --unsure-amber: #7a4f00; --unsure-bg: #fff8e6; --unsure-border: #f5d98a;
+    --text: #1c1c1c; --text-mid: #4a4a4a; --text-soft: #707070;
+    --bg: #f7f9fc; --white: #ffffff; --border: #d8dde8;
+    --radius: 14px; --shadow: 0 2px 16px rgba(26,39,68,0.09);
+  }
+  body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 17px; line-height: 1.65; min-height: 100vh; }
+
+  nav { background: var(--navy); padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between; height: 64px; position: sticky; top: 0; z-index: 100; }
+  .nav-logo { font-family: 'Lora', Georgia, serif; font-size: 1.3rem; font-weight: 600; color: #fff; text-decoration: none; letter-spacing: -0.01em; }
+  .nav-logo span { color: #88b8ff; }
+  .nav-right { display: flex; align-items: center; gap: 1rem; }
+  .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+  nav a.nav-link { color: #b8cbf0; font-size: 0.9rem; text-decoration: none; transition: color 0.2s; }
+  nav a.nav-link:hover { color: #fff; }
+  .lang-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 999px; padding: 0.3rem 0.9rem; color: #fff; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
+  .lang-btn:hover { background: rgba(255,255,255,0.25); }
+
+  .hamburger { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 4px; }
+  .hamburger span { display: block; width: 24px; height: 2px; background: #fff; border-radius: 2px; transition: all 0.25s; }
+  .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .hamburger.open span:nth-child(2) { opacity: 0; }
+  .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  .mobile-menu { display: none; position: fixed; top: 64px; left: 0; right: 0; background: var(--navy-light); z-index: 99; padding: 1rem 1.5rem 1.5rem; flex-direction: column; gap: 0; border-top: 1px solid rgba(255,255,255,0.1); }
+  .mobile-menu.open { display: flex; }
+  .mobile-menu a { color: #d4e3ff; font-size: 1.05rem; text-decoration: none; padding: 0.9rem 0; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .mobile-menu a:last-child { border-bottom: none; }
+  .mobile-menu a:hover { color: #fff; }
+
+  .hero-badges { display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap; padding: 0 1rem; max-width: 600px; margin: 0 auto; }
+  .badge { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 999px; padding: 0.35rem 1rem; font-size: 0.85rem; color: #d4e3ff; white-space: nowrap; }
+
+  .hero { background: linear-gradient(160deg, var(--navy) 0%, var(--navy-light) 100%); color: #fff; text-align: center; padding: 2.5rem 2rem 2rem; position: relative; overflow: hidden; width: 100%; }
+  .hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 80% 60% at 50% 110%, rgba(136,184,255,0.15) 0%, transparent 70%); pointer-events: none; }
+  .hero-eyebrow { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #88b8ff; margin-bottom: 0.6rem; }
+  .hero h1 { font-family: 'Lora', Georgia, serif; font-size: clamp(1.7rem, 4vw, 2.6rem); font-weight: 600; line-height: 1.15; margin-bottom: 0.7rem; letter-spacing: -0.02em; }
+  .hero h1 em { font-style: italic; color: #88b8ff; }
+  .hero-sub { font-size: 0.95rem; color: #b8cbf0; max-width: 520px; margin: 0 auto 1.2rem; line-height: 1.6; }
+  .hero-badges { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; padding: 0 1rem; max-width: 600px; margin: 0 auto; }
+  .badge { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 999px; padding: 0.25rem 0.8rem; font-size: 0.78rem; color: #d4e3ff; white-space: nowrap; }
+
+  .container { max-width: 780px; margin: 0 auto; padding: 0 1.5rem; }
+  .tool-section { margin: 0 auto; max-width: 780px; padding: 2rem 1.5rem 4rem; }
+  .tool-card { background: var(--white); border-radius: 20px; box-shadow: var(--shadow), 0 0 0 1px rgba(26,39,68,0.07); overflow: hidden; }
+
+  .tabs { display: flex; border-bottom: 1px solid var(--border); background: #f0f4fb; }
+  .tab-btn { flex: 1; padding: 1rem 0.5rem; font-size: 0.95rem; font-weight: 500; color: var(--text-soft); background: none; border: none; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+  .tab-btn.active { color: var(--navy); border-bottom-color: var(--navy); background: var(--white); }
+  .tab-btn:hover:not(.active) { color: var(--navy-light); background: rgba(255,255,255,0.6); }
+  .tab-icon { font-size: 1.2rem; }
+
+  .panel { display: none; padding: 2rem; }
+  .panel.active { display: block; }
+  .panel-label { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-soft); margin-bottom: 0.6rem; }
+  .textarea-wrap { position: relative; }
+  .panel textarea { width: 100%; min-height: 140px; border: 1.5px solid var(--border); border-radius: var(--radius); padding: 1rem 1.1rem; font-family: inherit; font-size: 1rem; color: var(--text); resize: vertical; line-height: 1.6; transition: border-color 0.2s; background: #fafbfd; }
+  .panel textarea:focus { outline: none; border-color: var(--navy); background: var(--white); }
+  .panel textarea::placeholder { color: #aab; }
+  .hint { font-size: 0.85rem; color: var(--text-soft); margin-top: 0.5rem; line-height: 1.5; }
+
+  /* ── VOICE ── */
+  .mic-btn { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.75rem; padding: 0.65rem 1.2rem; background: var(--white); border: 1.5px solid var(--border); border-radius: 999px; font-family: inherit; font-size: 0.9rem; font-weight: 500; color: var(--navy); cursor: pointer; transition: all 0.2s; }
+  .mic-btn:hover { border-color: var(--navy); background: var(--sky); }
+  .mic-btn.listening { border-color: #c0392b; background: #fdeaea; color: #c0392b; animation: micPulse 1.2s ease-in-out infinite; }
+  @keyframes micPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(192,57,43,0.3); } 50% { box-shadow: 0 0 0 8px rgba(192,57,43,0); } }
+  .mic-icon { font-size: 1.1rem; }
+
+  .listen-btn { display: none; align-items: center; gap: 0.5rem; margin-top: 0.75rem; padding: 0.65rem 1.2rem; background: var(--real-bg); border: 1.5px solid var(--real-border); border-radius: 999px; font-family: inherit; font-size: 0.9rem; font-weight: 500; color: var(--real-green); cursor: pointer; transition: all 0.2s; }
+  .listen-btn:hover { background: #d0edda; }
+  .listen-btn.speaking { background: #d0edda; }
+  .no-voice-msg { font-size: 0.8rem; color: var(--text-soft); margin-top: 0.5rem; display: none; }
+
+  /* ── CALL CHECKLIST ── */
+  .checklist { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.25rem; }
+  .check-item { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.8rem 1rem; background: var(--white); border: 1.5px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: border-color 0.2s, background 0.2s; font-size: 0.95rem; line-height: 1.5; }
+  .check-item:hover { border-color: var(--navy); background: var(--sky); }
+  .check-item input[type=checkbox] { width: 20px; height: 20px; min-width: 20px; accent-color: var(--navy); cursor: pointer; margin-top: 2px; }
+  .check-item input:checked + span { color: var(--navy); font-weight: 500; }
+  .check-item:has(input:checked) { border-color: var(--navy); background: var(--sky); }
+
+  .score-box { border-radius: var(--radius); padding: 1.4rem 1.5rem; border: 1.5px solid; animation: fadeIn 0.3s ease; margin-bottom: 0.5rem; }
+  .score-box.safe { background: var(--real-bg); border-color: var(--real-border); }
+  .score-box.warning { background: var(--unsure-bg); border-color: var(--unsure-border); }
+  .score-box.danger { background: var(--fake-bg); border-color: var(--fake-border); }
+  .score-verdict { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; }
+  .score-box.safe .score-verdict { color: var(--real-green); }
+  .score-box.warning .score-verdict { color: var(--unsure-amber); }
+  .score-box.danger .score-verdict { color: var(--fake-red); }
+  .score-text { font-size: 0.95rem; color: var(--text-mid); line-height: 1.7; }
+
+  .check-btn { display: block; width: 100%; margin-top: 1.25rem; padding: 1rem; background: var(--navy); color: #fff; border: none; border-radius: var(--radius); font-family: inherit; font-size: 1.05rem; font-weight: 600; cursor: pointer; letter-spacing: 0.01em; transition: background 0.2s, transform 0.1s; }
+  .check-btn:hover { background: var(--navy-light); }
+  .check-btn:active { transform: scale(0.99); }
+  .check-btn:disabled { background: #9aa; cursor: not-allowed; }
+
+  .result-box { display: none; margin-top: 1.5rem; border-radius: var(--radius); padding: 1.4rem 1.5rem; border: 1.5px solid; animation: fadeIn 0.35s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .result-box.real { background: var(--real-bg); border-color: var(--real-border); }
+  .result-box.fake { background: var(--fake-bg); border-color: var(--fake-border); }
+  .result-box.unsure { background: var(--unsure-bg); border-color: var(--unsure-border); }
+  .result-verdict { font-size: 1.3rem; font-weight: 600; display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.75rem; }
+  .result-box.real .result-verdict { color: var(--real-green); }
+  .result-box.fake .result-verdict { color: var(--fake-red); }
+  .result-box.unsure .result-verdict { color: var(--unsure-amber); }
+  .verdict-icon { font-size: 1.5rem; }
+  .result-text { color: var(--text-mid); line-height: 1.7; font-size: 0.98rem; }
+  .result-tips { margin-top: 1rem; }
+  .result-tips h4 { font-size: 0.85rem; font-weight: 600; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 0.4rem; }
+  .result-tips ul { padding-left: 1.2rem; color: var(--text-mid); font-size: 0.92rem; line-height: 1.8; }
+  .loading-msg { display: none; text-align: center; padding: 1.5rem; color: var(--text-soft); font-size: 0.95rem; animation: pulse 1.5s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+
+  .section { padding: 4rem 0; }
+  .section-title { font-family: 'Lora', Georgia, serif; font-size: 1.9rem; font-weight: 600; color: var(--navy); margin-bottom: 0.5rem; }
+  .section-sub { color: var(--text-soft); margin-bottom: 2.5rem; }
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; }
+  .step-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; }
+  .step-num { width: 36px; height: 36px; background: var(--navy); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.9rem; margin-bottom: 1rem; }
+  .step-card h3 { font-size: 1rem; font-weight: 600; color: var(--navy); margin-bottom: 0.4rem; }
+  .step-card p { font-size: 0.9rem; color: var(--text-soft); line-height: 1.6; }
+
+  .examples-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 1rem; }
+  .example-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.2rem; }
+
+  .example-tag { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.5rem; }
+  .example-tag.msg { color: #1a5a99; } .example-tag.news { color: #6b1a99; } .example-tag.photo { color: #1a6b3a; }
+  .example-card p { font-size: 0.88rem; color: var(--text-mid); line-height: 1.55; }
+  .example-cta { font-size: 0.8rem; color: var(--navy); font-weight: 500; margin-top: 0.6rem; }
+
+  .tips-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+  .tip-card { border-left: 4px solid var(--sky-mid); background: var(--white); border-radius: 0 var(--radius) var(--radius) 0; padding: 1.2rem 1.4rem; }
+  .tip-card h3 { font-size: 1rem; font-weight: 600; color: var(--navy); margin-bottom: 0.35rem; }
+  .tip-card p { font-size: 0.88rem; color: var(--text-soft); line-height: 1.6; }
+
+  .faq-list { max-width: 720px; margin: 0 auto; }
+  details { border-bottom: 1px solid var(--border); }
+  details:first-of-type { border-top: 1px solid var(--border); }
+  summary { font-size: 1.05rem; font-weight: 500; color: var(--navy); padding: 1.2rem 2rem 1.2rem 0; cursor: pointer; list-style: none; position: relative; line-height: 1.5; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: '+'; position: absolute; right: 0; top: 50%; transform: translateY(-50%); font-size: 1.4rem; font-weight: 300; color: var(--text-soft); }
+  details[open] summary::after { content: '−'; }
+  .faq-answer { padding: 0 0 1.2rem; color: var(--text-mid); font-size: 0.95rem; line-height: 1.8; max-width: 640px; }
+  .faq-answer p + p { margin-top: 0.75rem; }
+  .faq-answer ul { padding-left: 1.2rem; margin-top: 0.5rem; }
+  .faq-answer li { margin-bottom: 0.4rem; }
+
+  .link-field-wrap { margin-top: 1rem; border-top: 1px dashed var(--border); padding-top: 1rem; }
+  .link-field-wrap .panel-label { margin-bottom: 0.4rem; }
+  .link-input { width: 100%; border: 1.5px solid var(--border); border-radius: var(--radius); padding: 0.7rem 1rem; font-family: inherit; font-size: 0.95rem; color: var(--text); background: #fafbfd; transition: border-color 0.2s; }
+  .link-input:focus { outline: none; border-color: var(--navy); background: var(--white); }
+  .link-input::placeholder { color: #aab; }
+
+  footer { background: var(--navy); color: #b8cbf0; text-align: center; padding: 2.5rem 2rem; font-size: 0.85rem; line-height: 1.8; }
+  footer a { color: #88b8ff; text-decoration: none; }
+  footer strong { color: #fff; }
+  html { scroll-behavior: smooth; }
+
+  @media (max-width: 700px) {
+    .hero { padding: 3.5rem 1.25rem 3rem; }
+    .panel { padding: 1.5rem; }
+    .tab-btn { font-size: 0.82rem; padding: 0.85rem 0.3rem; }
+    .tab-icon { display: none; }
+    .nav-links { display: none; }
+    .hamburger { display: flex; }
+    .badge { font-size: 0.78rem; padding: 0.3rem 0.75rem; }
+    .hero h1 { font-size: 2.2rem; }
+    .hero-sub { font-size: 1rem; }
+    .section-title { font-size: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="#">Clari<span>faux</span></a>
+  <div class="nav-right">
+    <div class="nav-links">
+      <a class="nav-link" href="#tool" data-en="Check something" data-fr="Vérifier">Check something</a>
+      <a class="nav-link" href="#tips" data-en="How to spot fakes" data-fr="Repérer les faux">How to spot fakes</a>
+      <a class="nav-link" href="#faq" data-en="FAQ" data-fr="FAQ">FAQ</a>
+      <a class="nav-link" href="#about" data-en="About" data-fr="À propos">About</a>
+    </div>
+    <button class="lang-btn" onclick="toggleLang()" id="lang-btn">🇫🇷 Français</button>
+    <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobile-menu">
+  <a href="#tool" onclick="closeMenu()" data-en="Check something" data-fr="Vérifier">Check something</a>
+  <a href="#tips" onclick="closeMenu()" data-en="How to spot fakes" data-fr="Repérer les faux">How to spot fakes</a>
+  <a href="#faq" onclick="closeMenu()" data-en="FAQ" data-fr="FAQ">FAQ</a>
+  <a href="#about" onclick="closeMenu()" data-en="About" data-fr="À propos">About</a>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <p class="hero-eyebrow" data-en="Free · No sign-up · Powered by AI" data-fr="Gratuit · Sans inscription · Propulsé par l'IA">Free · No sign-up · Powered by AI</p>
+  <h1 data-en="Is this message<br><em>real or fake?</em>" data-fr="Ce message est-il<br><em>vrai ou faux ?</em>">Is this message<br><em>real or fake?</em></h1>
+  <p class="hero-sub" data-en="Paste a suspicious message, news headline, or describe a photo — and add a link for extra analysis. We'll tell you plainly — and explain why." data-fr="Collez un message suspect, un titre d'actualité ou décrivez une photo — ajoutez un lien pour une analyse approfondie. On vous répond clairement.">Paste a suspicious message, news headline, or describe a photo — and add a link for extra analysis. We'll tell you plainly — and explain why.</p>
+  <div class="hero-badges">
+    <span class="badge" data-en="💬 WhatsApp messages" data-fr="💬 Messages WhatsApp">💬 WhatsApp messages</span>
+    <span class="badge" data-en="📰 News headlines" data-fr="📰 Titres d'actualité">📰 News headlines</span>
+    <span class="badge" data-en="🖼 Suspicious photos" data-fr="🖼 Photos suspectes">🖼 Suspicious photos</span>
+    <span class="badge" data-en="🔗 Suspicious links" data-fr="🔗 Liens suspects">🔗 Suspicious links</span>
+  </div>
+</section>
+
+<!-- TOOL -->
+<section class="tool-section" id="tool">
+  <div class="tool-card">
+    <div class="tabs" role="tablist">
+      <button class="tab-btn active" role="tab" onclick="switchTab(this, 'message')" aria-selected="true">
+        <span class="tab-icon">💬</span> <span data-en="Message or email" data-fr="Message ou e-mail">Message or email</span>
+      </button>
+      <button class="tab-btn" role="tab" onclick="switchTab(this, 'news')" aria-selected="false">
+        <span class="tab-icon">📰</span> <span data-en="News headline" data-fr="Titre d'actualité">News headline</span>
+      </button>
+      <button class="tab-btn" role="tab" onclick="switchTab(this, 'photo')" aria-selected="false">
+        <span class="tab-icon">🖼</span> <span data-en="Photo or video" data-fr="Photo ou vidéo">Photo or video</span>
+      </button>
+      <button class="tab-btn" role="tab" onclick="switchTab(this, 'call')" aria-selected="false">
+        <span class="tab-icon">📞</span> <span data-en="Suspicious call" data-fr="Appel suspect">Suspicious call</span>
+      </button>
+    </div>
+
+    <!-- MESSAGE PANEL -->
+    <div class="panel active" id="panel-message">
+      <p class="panel-label" data-en="Paste the message here" data-fr="Collez le message ici">Paste the message here</p>
+      <textarea id="input-message"
+        data-placeholder-en="e.g. &quot;Your bank account has been locked. Click here immediately to verify your identity: www.secure-bank-verify.net&quot;"
+        data-placeholder-fr="Ex. : « Votre compte bancaire a été suspendu. Cliquez ici immédiatement : www.credit-agricole-secure-verify.net »"
+        placeholder="e.g. &quot;Your bank account has been locked. Click here immediately to verify your identity: www.secure-bank-verify.net&quot;"></textarea>
+      <button class="mic-btn" onclick="startListening('message')" id="mic-message">
+        <span class="mic-icon">🎤</span> <span data-en="Or speak your message" data-fr="Ou parlez votre message">Or speak your message</span>
+      </button>
+      <p class="no-voice-msg" id="no-voice-message" data-en="Voice input not supported in this browser. Try Chrome or Safari." data-fr="Saisie vocale non supportée. Essayez Chrome ou Safari."></p>
+      <p class="hint" data-en="Works with WhatsApp forwards, SMS, emails, or anything someone sent you that felt strange." data-fr="Fonctionne avec les messages WhatsApp transférés, SMS, e-mails ou tout message qui vous a semblé bizarre.">Works with WhatsApp forwards, SMS, emails, or anything someone sent you that felt strange.</p>
+      <p class="panel-label" style="margin-top:1rem;" data-en="Got a link too? Paste it here (optional)" data-fr="Vous avez aussi un lien ? Collez-le ici (facultatif)">Got a link too? Paste it here (optional)</p>
+      <input type="url" id="link-message" style="width:100%;border:1.5px solid var(--border);border-radius:var(--radius);padding:0.7rem 1rem;font-family:inherit;font-size:0.95rem;color:var(--text);background:#fafbfd;transition:border-color 0.2s;" data-placeholder-en="e.g. https://suspicious-site.net/verify" data-placeholder-fr="ex. https://site-suspect.net/verifier" placeholder="e.g. https://suspicious-site.net/verify">
+      <div class="loading-msg" id="loading-message" data-en="Checking this message… give me a moment ⏳" data-fr="Analyse du message en cours… un instant ⏳">Checking this message… give me a moment ⏳</div>
+      <div class="result-box" id="result-message">
+        <div class="result-verdict"><span class="verdict-icon"></span><span class="verdict-label"></span></div>
+        <div class="result-text"></div>
+        <div class="result-tips"></div>
+        <button class="listen-btn" id="listen-message" onclick="readAloud('message')">
+          🔊 <span data-en="Read this aloud" data-fr="Lire à voix haute">Read this aloud</span>
+        </button>
+      </div>
+      <button class="check-btn" onclick="check('message')" data-en="Check this message →" data-fr="Vérifier ce message →">Check this message →</button>
+    </div>
+
+    <!-- NEWS PANEL -->
+    <div class="panel" id="panel-news">
+      <p class="panel-label" data-en="Paste a headline or short article excerpt" data-fr="Collez un titre ou un extrait d'article">Paste a headline or short article excerpt</p>
+      <textarea id="input-news"
+        data-placeholder-en="e.g. &quot;BREAKING: Scientists confirm 5G towers are secretly spreading a new virus&quot;"
+        data-placeholder-fr="Ex. : « EXCLUSIF : Des scientifiques confirment que les antennes 5G propagent secrètement un virus »"
+        placeholder="e.g. &quot;BREAKING: Scientists confirm 5G towers are secretly spreading a new virus&quot;"></textarea>
+      <button class="mic-btn" onclick="startListening('news')" id="mic-news">
+        <span class="mic-icon">🎤</span> <span data-en="Or speak the headline" data-fr="Ou dites le titre">Or speak the headline</span>
+      </button>
+      <p class="no-voice-msg" id="no-voice-news" data-en="Voice input not supported in this browser. Try Chrome or Safari." data-fr="Saisie vocale non supportée. Essayez Chrome ou Safari."></p>
+      <p class="hint" data-en="Copy the headline or first paragraph of anything that surprised or alarmed you online." data-fr="Copiez le titre ou le premier paragraphe de tout article qui vous a surpris ou alarmé.">Copy the headline or first paragraph of anything that surprised or alarmed you online.</p>
+      <p class="panel-label" style="margin-top:1rem;" data-en="Got the article link? Paste it here (optional)" data-fr="Vous avez le lien de l'article ? Collez-le ici (facultatif)">Got the article link? Paste it here (optional)</p>
+      <input type="url" id="link-news" style="width:100%;border:1.5px solid var(--border);border-radius:var(--radius);padding:0.7rem 1rem;font-family:inherit;font-size:0.95rem;color:var(--text);background:#fafbfd;transition:border-color 0.2s;" data-placeholder-en="e.g. https://unknown-news-site.com/article" data-placeholder-fr="ex. https://site-inconnu.com/article" placeholder="e.g. https://unknown-news-site.com/article">
+      <div class="loading-msg" id="loading-news" data-en="Analysing this headline… one moment ⏳" data-fr="Analyse du titre en cours… ⏳">Analysing this headline… one moment ⏳</div>
+      <div class="result-box" id="result-news">
+        <div class="result-verdict"><span class="verdict-icon"></span><span class="verdict-label"></span></div>
+        <div class="result-text"></div>
+        <div class="result-tips"></div>
+        <button class="listen-btn" id="listen-news" onclick="readAloud('news')">
+          🔊 <span data-en="Read this aloud" data-fr="Lire à voix haute">Read this aloud</span>
+        </button>
+      </div>
+      <button class="check-btn" onclick="check('news')" data-en="Check this headline →" data-fr="Vérifier ce titre →">Check this headline →</button>
+    </div>
+
+    <!-- PHOTO PANEL -->
+    <div class="panel" id="panel-photo">
+      <p class="panel-label" data-en="Describe what you see in the photo or video" data-fr="Décrivez ce que vous voyez sur la photo ou vidéo">Describe what you see in the photo or video</p>
+      <textarea id="input-photo"
+        data-placeholder-en="e.g. &quot;A photo showing a politician at a protest. Someone sent it claiming it proves he supports rioters.&quot;"
+        data-placeholder-fr="Ex. : « Une photo montre un responsable politique à une fête alors que des inondations touchaient le pays. »"
+        placeholder="e.g. &quot;A photo showing a politician at a protest. Someone sent it claiming it proves he supports rioters.&quot;"></textarea>
+      <button class="mic-btn" onclick="startListening('photo')" id="mic-photo">
+        <span class="mic-icon">🎤</span> <span data-en="Or describe it out loud" data-fr="Ou décrivez à voix haute">Or describe it out loud</span>
+      </button>
+      <p class="no-voice-msg" id="no-voice-photo" data-en="Voice input not supported in this browser. Try Chrome or Safari." data-fr="Saisie vocale non supportée. Essayez Chrome ou Safari."></p>
+      <p class="hint" data-en="Describe who or what you see, what's being claimed about it, and where you received it." data-fr="Décrivez qui ou quoi vous voyez, ce qu'on prétend à son sujet, et d'où vient ce contenu.">Describe who or what you see, what's being claimed about it, and where you received it.</p>
+      <p class="panel-label" style="margin-top:1rem;" data-en="Got a link to the photo or post? Paste it here (optional)" data-fr="Vous avez un lien vers la photo ou la publication ? Collez-le ici (facultatif)">Got a link to the photo or post? Paste it here (optional)</p>
+      <input type="url" id="link-photo" style="width:100%;border:1.5px solid var(--border);border-radius:var(--radius);padding:0.7rem 1rem;font-family:inherit;font-size:0.95rem;color:var(--text);background:#fafbfd;transition:border-color 0.2s;" data-placeholder-en="e.g. https://facebook.com/post/..." data-placeholder-fr="ex. https://facebook.com/post/..." placeholder="e.g. https://facebook.com/post/...">
+      <div class="loading-msg" id="loading-photo" data-en="Looking at the details you described… ⏳" data-fr="Analyse de la description en cours… ⏳">Looking at the details you described… ⏳</div>
+      <div class="result-box" id="result-photo">
+        <div class="result-verdict"><span class="verdict-icon"></span><span class="verdict-label"></span></div>
+        <div class="result-text"></div>
+        <div class="result-tips"></div>
+        <button class="listen-btn" id="listen-photo" onclick="readAloud('photo')">
+          🔊 <span data-en="Read this aloud" data-fr="Lire à voix haute">Read this aloud</span>
+        </button>
+      </div>
+      <button class="check-btn" onclick="check('photo')" data-en="Check this image claim →" data-fr="Vérifier cette image →">Check this image claim →</button>
+    </div>
+  </div>
+</section>
+
+    <!-- CALL PANEL -->
+    <div class="panel" id="panel-call">
+      <p class="panel-label" data-en="Step 1 — Tick what happened during the call" data-fr="Étape 1 — Cochez ce qui s'est passé pendant l'appel">Step 1 — Tick what happened during the call</p>
+      <div class="checklist" id="call-checklist">
+        <label class="check-item">
+          <input type="checkbox" onchange="updateScore()">
+          <span data-en="They claimed to be from your bank, police, or a government agency" data-fr="Ils prétendaient venir de votre banque, de la police ou d'un organisme officiel">They claimed to be from your bank, police, or a government agency</span>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" onchange="updateScore()">
+          <span data-en="They said it was urgent — act now or something bad will happen" data-fr="Ils ont dit que c'était urgent — agissez maintenant ou quelque chose de grave arrivera">They said it was urgent — act now or something bad will happen</span>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" onchange="updateScore()">
+          <span data-en="They asked for your PIN, password, or card number" data-fr="Ils ont demandé votre code PIN, mot de passe ou numéro de carte">They asked for your PIN, password, or card number</span>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" onchange="updateScore()">
+          <span data-en="They asked you to transfer money or buy gift cards" data-fr="Ils vous ont demandé de transférer de l'argent ou d'acheter des cartes-cadeaux">They asked you to transfer money or buy gift cards</span>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" onchange="updateScore()">
+          <span data-en="They told you not to tell your family or friends about the call" data-fr="Ils vous ont dit de ne pas parler de cet appel à votre famille ou vos amis">They told you not to tell your family or friends about the call</span>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" onchange="updateScore()">
+          <span data-en="The voice sounded slightly robotic, or the audio quality was strange" data-fr="La voix semblait légèrement robotique ou la qualité audio était étrange">The voice sounded slightly robotic, or the audio quality was strange</span>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" onchange="updateScore()">
+          <span data-en="They already knew some personal details about you (name, address…)" data-fr="Ils connaissaient déjà des détails personnels vous concernant (nom, adresse…)">They already knew some personal details about you (name, address…)</span>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" onchange="updateScore()">
+          <span data-en="They asked you to stay on the line while you went to the bank or ATM" data-fr="Ils vous ont demandé de rester en ligne pendant que vous alliez à la banque ou au distributeur">They asked you to stay on the line while you went to the bank or ATM</span>
+        </label>
+      </div>
+
+      <div class="score-box" id="score-box" style="display:none;">
+        <div class="score-verdict" id="score-verdict"></div>
+        <p class="score-text" id="score-text"></p>
+        <button class="listen-btn" id="listen-call-score" onclick="readAloudScore()" style="margin-top:0.75rem;">
+          🔊 <span data-en="Read this aloud" data-fr="Lire à voix haute">Read this aloud</span>
+        </button>
+      </div>
+
+      <div style="border-top: 1px solid var(--border); margin: 1.5rem 0;"></div>
+
+      <p class="panel-label" data-en="Step 2 — Tell us more about the call (optional)" data-fr="Étape 2 — Dites-nous en plus sur l'appel (facultatif)">Step 2 — Tell us more about the call (optional)</p>
+      <textarea id="input-call"
+        data-placeholder-en="e.g. &quot;Someone called saying they were from my bank. They said my account was compromised and I needed to move my money to a safe account immediately.&quot;"
+        data-placeholder-fr="Ex. : « Quelqu'un a appelé en disant venir de ma banque. Ils ont dit que mon compte était compromis et que je devais transférer mon argent immédiatement. »"
+        placeholder="e.g. &quot;Someone called saying they were from my bank…&quot;"></textarea>
+      <button class="mic-btn" onclick="startListening('call')" id="mic-call">
+        <span class="mic-icon">🎤</span> <span data-en="Or describe the call out loud" data-fr="Ou décrivez l'appel à voix haute">Or describe the call out loud</span>
+      </button>
+      <p class="no-voice-msg" id="no-voice-call" data-en="Voice input not supported in this browser. Try Chrome or Safari." data-fr="Saisie vocale non supportée. Essayez Chrome ou Safari."></p>
+      <div class="loading-msg" id="loading-call" data-en="Analysing the call details… ⏳" data-fr="Analyse de l'appel en cours… ⏳">Analysing the call details… ⏳</div>
+      <div class="result-box" id="result-call">
+        <div class="result-verdict"><span class="verdict-icon"></span><span class="verdict-label"></span></div>
+        <div class="result-text"></div>
+        <div class="result-tips"></div>
+        <button class="listen-btn" id="listen-call" onclick="readAloud('call')">
+          🔊 <span data-en="Read this aloud" data-fr="Lire à voix haute">Read this aloud</span>
+        </button>
+      </div>
+      <button class="check-btn" onclick="check('call')" data-en="Get full analysis →" data-fr="Obtenir une analyse complète →">Get full analysis →</button>
+    </div>
+  </div>
+</section>
+<section class="section" id="how">
+  <div class="container">
+    <h2 class="section-title" data-en="How it works" data-fr="Comment ça marche">How it works</h2>
+    <p class="section-sub" data-en="No tech knowledge needed. Three steps, plain results." data-fr="Pas besoin de connaissances techniques. Trois étapes, une réponse claire.">No tech knowledge needed. Three steps, plain results.</p>
+    <div class="steps">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <h3 data-en="Paste what worried you" data-fr="Collez ce qui vous inquiète">Paste what worried you</h3>
+        <p data-en="Copy the message, headline, or describe the photo. No account needed." data-fr="Copiez le message, le titre, ou décrivez la photo. Aucun compte requis.">Copy the message, headline, or describe the photo. No account needed.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <h3 data-en="We check the signals" data-fr="On analyse les signaux">We check the signals</h3>
+        <p data-en="Our AI looks at language patterns, urgency tricks, and known misinformation tactics." data-fr="Notre IA repère les tournures alarmistes, les tactiques de manipulation et les schémas de désinformation connus.">Our AI looks at language patterns, urgency tricks, and known misinformation tactics.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <h3 data-en="Plain English answer" data-fr="Réponse en français clair">Plain English answer</h3>
+        <p data-en="You get a clear verdict — Real, Likely Fake, or Uncertain — explained like a friend would." data-fr="Vous obtenez un verdict clair — Vrai, Probablement faux ou Incertain — expliqué simplement.">You get a clear verdict — Real, Likely Fake, or Uncertain — explained like a friend would.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EXAMPLES -->
+<section class="section" style="background: var(--sky); padding: 3rem 0;" id="examples">
+  <div class="container">
+    <h2 class="section-title" data-en="Real-world examples to watch out for" data-fr="Exemples réels à surveiller">Real-world examples to watch out for</h2>
+    <p class="section-sub" data-en="These are the kinds of messages and headlines our tool is designed to catch." data-fr="Voici le type de messages et de titres que notre outil est conçu à détecter.">These are the kinds of messages and headlines our tool is designed to catch.</p>
+    <div class="examples-grid" id="examples-grid">
+      <!-- injected by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- TIPS -->
+<section class="section" id="tips">
+  <div class="container">
+    <h2 class="section-title" data-en="5 signs something might be fake" data-fr="5 signes qu'un contenu est peut-être faux">5 signs something might be fake</h2>
+    <p class="section-sub" data-en="Learn to spot the tricks — even without our tool." data-fr="Apprenez à repérer les astuces — même sans notre outil.">Learn to spot the tricks — even without our tool.</p>
+    <div class="tips-grid" id="tips-grid">
+      <!-- injected by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="section" style="background: var(--white);" id="about">
+  <div class="container" style="max-width:600px; text-align:center;">
+    <h2 class="section-title" data-en="Why we built this" data-fr="Pourquoi cet outil existe">Why we built this</h2>
+    <p style="color: var(--text-mid); line-height:1.8; margin-bottom: 1rem;" data-en="AI-generated content is spreading faster than ever — fake voices, fake faces, fake news. Everyone is at risk, but older adults are targeted most often by sophisticated scams." data-fr="Les contenus générés par l'IA se répandent plus vite que jamais — fausses voix, faux visages, fausses nouvelles. Les personnes âgées sont les premières ciblées par des arnaques sophistiquées.">AI-generated content is spreading faster than ever — fake voices, fake faces, fake news. Everyone is at risk, but older adults are targeted most often by sophisticated scams.</p>
+    <p style="color: var(--text-mid); line-height:1.8; margin-bottom: 1rem;" data-en="This tool was built on a simple belief: everyone, regardless of age or tech skills, deserves to navigate the internet safely." data-fr="Cet outil repose sur une conviction simple : chacun, quel que soit son âge ou ses compétences numériques, mérite de naviguer sur Internet en sécurité.">This tool was built on a simple belief: everyone, regardless of age or tech skills, deserves to navigate the internet safely.</p>
+    <p style="color: var(--text-soft); font-size:0.88rem; line-height:1.7;" data-en="This tool is AI-assisted and not infallible. When in doubt, always check with a trusted person or an official source directly." data-fr="Cet outil est assisté par l'IA et n'est pas infaillible. En cas de doute, vérifiez toujours auprès d'une personne de confiance ou d'une source officielle.">This tool is AI-assisted and not infallible. When in doubt, always check with a trusted person or an official source directly.</p>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="section" id="faq" style="background: var(--bg);">
+  <div class="container">
+    <h2 class="section-title" data-en="Frequently asked questions" data-fr="Questions fréquentes">Frequently asked questions</h2>
+    <p class="section-sub" data-en="Answers to the most common questions about spotting AI fakes, scams, and misinformation." data-fr="Réponses aux questions les plus courantes sur les faux générés par l'IA, les arnaques et la désinformation.">Answers to the most common questions about spotting AI fakes, scams, and misinformation.</p>
+    <div class="privacy-notice">
+      <strong data-en="Privacy notice:" data-fr="Avis de confidentialité :">Privacy notice:</strong>
+      <span data-en=" Text you submit is sent to Anthropic's API for analysis and is not stored by us. No account, no cookies, no tracking. For Anthropic's data practices, see " data-fr=" Le texte soumis est envoyé à l'API d'Anthropic pour analyse et n'est pas stocké par nous. Aucun compte, aucun cookie, aucun suivi. Pour les pratiques d'Anthropic, consultez "> Text you submit is sent to Anthropic's API for analysis and is not stored by us. No account, no cookies, no tracking. For Anthropic's data practices, see </span><a href="https://www.anthropic.com/privacy" target="_blank">anthropic.com/privacy</a>.
+    </div>
+    <div class="faq-list" id="faq-list">
+      <!-- injected by JS -->
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p><strong>Clarifaux</strong> — <span data-en="A digital safety tool for everyone" data-fr="Un outil de sécurité numérique pour tous">A digital safety tool for everyone</span></p>
+  <p style="margin-top:0.5rem;" data-en="No personal data stored · Free to use · No cookies" data-fr="Aucune donnée personnelle stockée · Gratuit · Sans cookies">No personal data stored · Free to use · No cookies</p>
+  <p style="margin-top:0.5rem; font-size:0.8rem;" data-en="This tool is for educational purposes. Always verify important information through official channels." data-fr="Cet outil est fourni à titre éducatif. Vérifiez toujours les informations importantes auprès de sources officielles.">This tool is for educational purposes. Always verify important information through official channels.</p>
+</footer>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"How can I tell if a photo has been generated by AI?","acceptedAnswer":{"@type":"Answer","text":"AI-generated images often show signs like hands with too many or too few fingers, ears that don't match, blurry background text, and unnatural lighting. Describe the image in our tool for an instant check."}},
+    {"@type":"Question","name":"How do I know if a WhatsApp message is a scam?","acceptedAnswer":{"@type":"Answer","text":"Most WhatsApp scams use urgency, suspicious links, requests for money or personal information, and pressure not to tell others. Paste the message into our checker for a plain-language verdict."}},
+    {"@type":"Question","name":"Can AI fake someone's voice in a phone call?","acceptedAnswer":{"@type":"Answer","text":"Yes. With just a few seconds of real audio, AI can clone someone's voice convincingly. If a family member calls asking for money urgently, hang up and call them back on their known number."}},
+    {"@type":"Question","name":"What is a deepfake and how can I spot one?","acceptedAnswer":{"@type":"Answer","text":"A deepfake is a video or image where a person's face or voice has been replaced by AI. Signs include unnatural blinking, blurring around the face, and voice not matching lip movements."}},
+    {"@type":"Question","name":"How do I check if a news story is fake?","acceptedAnswer":{"@type":"Answer","text":"Search the headline — real news appears across multiple known outlets. Check the date, look for an author name, and watch for emotional language designed to outrage rather than inform."}},
+    {"@type":"Question","name":"Is this tool free?","acceptedAnswer":{"@type":"Answer","text":"Completely free, no account required. Simply paste your text and click check. We do not store anything you submit."}},
+    {"@type":"Question","name":"Can this tool be wrong?","acceptedAnswer":{"@type":"Answer","text":"Yes — no AI tool is 100% accurate. It is designed to help you think critically, not replace your own judgement. Think of it as a second opinion, not a final answer."}},
+    {"@type":"Question","name":"What should I do if I already clicked a suspicious link or sent money?","acceptedAnswer":{"@type":"Answer","text":"Act quickly: close the browser and change your passwords. If you gave personal information or sent money, contact your bank immediately and report the scam to your national consumer protection authority."}}
+  ]
+}
+</script>
+
+<script>
+  // ── CONTENT ──────────────────────────────────────────────
+  const EXAMPLES = {
+    en: [
+      { tag: 'msg', label: '💬 WhatsApp', preview: '"URGENT: Your parcel could not be delivered. Pay the €2.50 fee within 24 hours…"', type: 'message', text: "URGENT: Your parcel could not be delivered. Pay the €2.50 redelivery fee within 24 hours or it will be returned: parcel-eu-redelivery.net/pay" },
+      { tag: 'news', label: '📰 Health claim', preview: '"Doctors confirm warm lemon water prevents cancer — but pharma companies are hiding it"', type: 'news', text: "EXCLUSIVE: Doctors confirm that drinking warm lemon water every morning completely prevents cancer, but pharmaceutical companies are suppressing this information." },
+      { tag: 'photo', label: '🖼 Viral photo', preview: '"Video of a politician partying while a disaster was happening — sent on family WhatsApp"', type: 'photo', text: "A video is circulating showing what appears to be the French President at a luxury party last week. The caption says he was partying while Paris flooded. It was sent to me by a family member on WhatsApp." },
+      { tag: 'msg', label: '📞 Family scam', preview: '"Hi grandma, it\'s me! I had an accident abroad and need you to send €500 urgently…"', type: 'message', text: "Hi grandma, it's me! I'm in trouble — I had an accident abroad and I need you to send €500 urgently via Western Union. Please don't tell mum and dad yet. I love you." }
+    ],
+    fr: [
+      { tag: 'msg', label: '💬 SMS / WhatsApp', preview: '« URGENT : Votre colis n\'a pas pu être livré. Réglez 1,99 € dans les 24 heures… »', type: 'message', text: "URGENT : Votre colis n'a pas pu être livré. Veuillez régler les frais de réexpédition de 1,99 € dans les 24 heures : colissimo-relivraison-secure.net/payer" },
+      { tag: 'news', label: '📰 Santé', preview: '« Des médecins confirment que l\'eau citronnée prévient le cancer — les labos cachent tout »', type: 'news', text: "EXCLUSIF : Des médecins confirment que boire de l'eau chaude citronnée chaque matin prévient complètement le cancer, mais les laboratoires pharmaceutiques suppriment cette information." },
+      { tag: 'photo', label: '🖼 Vidéo virale', preview: '« Vidéo d\'un responsable en fête pendant une catastrophe — reçue sur WhatsApp »', type: 'photo', text: "Une vidéo circule montrant ce qui semble être le Président en train de faire la fête dans un restaurant de luxe. La légende dit qu'il festoyait pendant que des inondations dévastaient le sud de la France." },
+      { tag: 'msg', label: '📞 Arnaque familiale', preview: '« Mamie, c\'est moi ! J\'ai eu un accident et j\'ai besoin de 600 € en urgence… »', type: 'message', text: "Mamie, c'est moi ! J'ai eu un accident à l'étranger et j'ai besoin que tu m'envoies 600 € en urgence par virement. S'il te plaît, ne le dis pas encore à maman et papa. Je t'aime." }
+    ]
+  };
+
+  const TIPS = {
+    en: [
+      { h: 'It makes you panic', p: 'Scammers want you to act before you think. "Urgent!", "24 hours", "or else" — these are pressure tactics.' },
+      { h: 'The link looks almost right', p: '"paypa1.com" not "paypal.com". One wrong letter is all it takes. Always hover before you click.' },
+      { h: 'No one else is reporting it', p: 'Real big news appears in multiple known outlets. If only one site is publishing it, be sceptical.' },
+      { h: 'It was forwarded many times', p: 'WhatsApp labels heavily-forwarded messages. The more it\'s been passed around, the less you can trust it.' },
+      { h: 'It asks you to keep a secret', p: '"Don\'t tell anyone" is a classic manipulation tactic. Legitimate services never ask for secrecy.' }
+    ],
+    fr: [
+      { h: 'Ça vous fait paniquer', p: 'Les escrocs veulent que vous agissiez avant de réfléchir. « Urgent ! », « 24 heures », « sinon… » — ce sont des tactiques de pression.' },
+      { h: 'Le lien ressemble à un vrai, mais pas tout à fait', p: '« credit-agricoIe.fr » au lieu de « credit-agricole.fr » — une seule lettre suffit. Regardez bien avant de cliquer.' },
+      { h: 'Personne d\'autre n\'en parle', p: 'Une vraie grande nouvelle apparaît dans plusieurs sources connues. Si un seul site en parle, soyez sceptique.' },
+      { h: 'Le message a été transféré de nombreuses fois', p: 'WhatsApp signale les messages très transférés. Plus un message circule, moins il est fiable.' },
+      { h: 'On vous demande de garder le secret', p: '« Ne le dis à personne » est une tactique de manipulation classique. Les services légitimes ne demandent jamais le secret.' }
+    ]
+  };
+
+  const FAQS = {
+    en: [
+      { q: 'How can I tell if a photo has been generated by AI?', a: '<p>AI-generated images often have telltale signs: hands with too many or too few fingers, ears that don\'t match, blurry background text, and lighting that doesn\'t behave naturally.</p><p>The fastest check: describe what you see in our tool above.</p>' },
+      { q: 'How do I know if a WhatsApp message is a scam?', a: '<p>Watch for: urgency ("act within 24 hours"), suspicious links, requests for money or personal information, a "family member in trouble" asking you not to tell anyone, and messages forwarded many times.</p>' },
+      { q: 'Can AI fake someone\'s voice in a phone call?', a: '<p>Yes — with just a few seconds of someone\'s real voice, AI tools can clone it convincingly. If a "family member" calls asking for money urgently, hang up and call them back on their known number. Establish a family code word.</p>' },
+      { q: 'What is a deepfake and how can I spot one?', a: '<p>A deepfake is a video or image where a real person\'s face or voice has been replaced by AI. Signs include: unnatural blinking, edges around the face that shimmer, voice not matching lip movements, and inconsistent lighting.</p>' },
+      { q: 'How do I check if a news story is fake?', a: '<p>Search the headline — real news appears across multiple known outlets. Check the date, look for an author name, and watch for emotional language designed to outrage rather than inform.</p>' },
+      { q: 'Is this tool free? Do I need to create an account?', a: '<p>Completely free, no account required. Simply paste your text and click check. We don\'t store anything you submit.</p>' },
+      { q: 'Can this tool be wrong?', a: '<p>Yes — no AI tool is 100% accurate. It is designed to help you think critically, not replace your own judgement. Think of it as a second opinion, not a final answer.</p>' },
+      { q: 'What should I do if I already clicked a suspicious link or sent money?', a: '<ul><li><strong>Clicked a link:</strong> close the browser and change your passwords.</li><li><strong>Gave personal information:</strong> contact your bank immediately.</li><li><strong>Sent money:</strong> contact your bank right away and report the scam to your national consumer protection authority.</li></ul>' }
+    ],
+    fr: [
+      { q: 'Comment savoir si une photo a été générée par une IA ?', a: '<p>Les images générées par IA présentent souvent des indices : doigts mal formés, oreilles asymétriques, texte flou en arrière-plan et éclairage incohérent.</p><p>La vérification la plus rapide : décrivez ce que vous voyez dans notre outil ci-dessus.</p>' },
+      { q: 'Comment savoir si un message WhatsApp est une arnaque ?', a: '<p>Méfiez-vous de : l\'urgence (« agissez dans les 24 heures »), des liens suspects, des demandes d\'argent ou d\'informations personnelles, d\'un « membre de la famille en danger » et des messages transférés de nombreuses fois.</p>' },
+      { q: 'L\'IA peut-elle imiter la voix de quelqu\'un lors d\'un appel ?', a: '<p>Oui — avec quelques secondes d\'audio réel, l\'IA peut cloner une voix de manière convaincante. Si un « membre de la famille » appelle pour demander de l\'argent en urgence, raccrochez et rappelez sur son numéro habituel. Établissez un mot de code familial.</p>' },
+      { q: 'Qu\'est-ce qu\'un deepfake et comment le repérer ?', a: '<p>Un deepfake est une vidéo ou image où le visage ou la voix d\'une personne a été remplacé par une IA. Signes : clignement anormal, contours flous, voix ne correspondant pas aux lèvres, éclairage incohérent.</p>' },
+      { q: 'Comment vérifier si une information est fausse ?', a: '<p>Recherchez le titre — une vraie information apparaît sur plusieurs sources connues. Vérifiez la date, l\'auteur et méfiez-vous du langage émotionnel conçu pour indigner plutôt qu\'informer.</p>' },
+      { q: 'Cet outil est-il gratuit ? Faut-il créer un compte ?', a: '<p>Entièrement gratuit, sans compte requis. Collez simplement votre texte et cliquez sur vérifier. Nous ne stockons rien de ce que vous soumettez.</p>' },
+      { q: 'Cet outil peut-il se tromper ?', a: '<p>Oui — aucun outil d\'IA n\'est fiable à 100 %. Considérez-le comme un deuxième avis, pas comme une réponse définitive.</p>' },
+      { q: 'Que faire si j\'ai déjà cliqué sur un lien suspect ou envoyé de l\'argent ?', a: '<ul><li><strong>Vous avez cliqué un lien :</strong> fermez le navigateur et changez vos mots de passe.</li><li><strong>Vous avez donné des informations :</strong> contactez votre banque immédiatement.</li><li><strong>Vous avez envoyé de l\'argent :</strong> contactez votre banque et signalez l\'arnaque sur cybermalveillance.gouv.fr.</li></ul>' }
+    ]
+  };
+
+  // ── MOBILE MENU ───────────────────────────────────────────
+  function toggleMenu() {
+    const hb = document.getElementById('hamburger');
+    const mm = document.getElementById('mobile-menu');
+    hb.classList.toggle('open');
+    mm.classList.toggle('open');
+  }
+  function closeMenu() {
+    document.getElementById('hamburger').classList.remove('open');
+    document.getElementById('mobile-menu').classList.remove('open');
+  }
+
+  // ── LANGUAGE ──────────────────────────────────────────────
+  let lang = 'en';
+
+  function detectLang() {
+    const bl = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
+    return bl.startsWith('fr') ? 'fr' : 'en';
+  }
+
+  function applyLang(l) {
+    lang = l;
+    document.documentElement.lang = l;
+    document.getElementById('lang-btn').textContent = l === 'fr' ? '🇬🇧 English' : '🇫🇷 Français';
+
+    // static data-en / data-fr elements (includes mobile menu)
+    document.querySelectorAll('[data-en]').forEach(el => {
+      const val = el.getAttribute('data-' + l);
+      if (val) el.innerHTML = val;
+    });
+
+    // textarea placeholders
+    document.querySelectorAll('textarea[data-placeholder-en]').forEach(el => {
+      el.placeholder = el.getAttribute('data-placeholder-' + l) || '';
+    });
+    // url input placeholders
+    document.querySelectorAll('input[type=url][data-placeholder-en]').forEach(el => {
+      el.placeholder = el.getAttribute('data-placeholder-' + l) || '';
+    });
+
+    // dynamic sections
+    renderExamples();
+    renderTips();
+    renderFaqs();
+
+    // reset tabs to first
+    document.querySelectorAll('.tab-btn').forEach((b,i) => { b.classList.toggle('active', i===0); b.setAttribute('aria-selected', i===0 ? 'true':'false'); });
+    document.querySelectorAll('.panel').forEach((p,i) => p.classList.toggle('active', i===0));
+    document.querySelectorAll('.result-box').forEach(r => r.style.display = 'none');
+  }
+
+  function toggleLang() { applyLang(lang === 'en' ? 'fr' : 'en'); }
+
+  function renderExamples() {
+    document.getElementById('examples-grid').innerHTML = EXAMPLES[lang].map(e =>
+      `<div class="example-card">
+        <p class="example-tag ${e.tag}">${e.label}</p>
+        <p>${e.preview}</p>
+      </div>`
+    ).join('');
+  }
+
+  function renderTips() {
+    document.getElementById('tips-grid').innerHTML = TIPS[lang].map(t =>
+      `<div class="tip-card"><h3>${t.h}</h3><p>${t.p}</p></div>`
+    ).join('');
+  }
+
+  function renderFaqs() {
+    document.getElementById('faq-list').innerHTML = FAQS[lang].map(f =>
+      `<details><summary>${f.q}</summary><div class="faq-answer">${f.a}</div></details>`
+    ).join('');
+  }
+
+  // ── TOOL ──────────────────────────────────────────────────
+  const PROMPTS = {
+    en: `You are a plain-language AI detection assistant helping elderly and non-tech-savvy users determine if content is real, AI-generated, or a scam.
+Analyse what the user shares and give a verdict in THREE parts:
+1. VERDICT: one of exactly these words: REAL, LIKELY FAKE, or UNCERTAIN
+2. EXPLANATION: 2-3 sentences in very plain, warm language — like a trusted friend explaining it. No jargon.
+3. TIPS: 2-3 short bullet points the user can act on right now.
+Format EXACTLY:
+VERDICT: [word]
+EXPLANATION: [explanation]
+TIPS:
+• [tip 1]
+• [tip 2]
+• [tip 3]`,
+    fr: `Tu es un assistant de détection IA en langage simple, conçu pour aider les personnes âgées à déterminer si un contenu est réel, généré par IA, ou une arnaque.
+Analyse ce que l'utilisateur partage et donne un verdict en TROIS parties :
+1. VERDICT : exactement l'un de ces mots : VRAI, PROBABLEMENT FAUX, ou INCERTAIN
+2. EXPLICATION : 2 à 3 phrases en langage très simple et bienveillant — comme un ami de confiance. Pas de jargon.
+3. CONSEILS : 2 à 3 courtes puces sur ce que l'utilisateur peut faire maintenant.
+Format EXACT :
+VERDICT : [mot]
+EXPLICATION : [explication]
+CONSEILS :
+• [conseil 1]
+• [conseil 2]
+• [conseil 3]`
+  };
+
+  const TYPE_LABELS = {
+    en: { message: 'a message or email', news: 'a news headline or article excerpt', photo: 'a description of a photo or video', call: 'a suspicious phone call' },
+    fr: { message: 'un message ou e-mail', news: 'un titre d\'actualité ou extrait d\'article', photo: 'une description de photo ou vidéo', call: 'un appel téléphonique suspect' }
+  };
+
+  const VERDICTS = {
+    en: { 'REAL': { cls:'real', icon:'✅', label:'Looks real' }, 'LIKELY FAKE': { cls:'fake', icon:'🚨', label:'Likely fake or a scam' }, 'UNCERTAIN': { cls:'unsure', icon:'🤔', label:'Hard to say — stay cautious' } },
+    fr: { 'VRAI': { cls:'real', icon:'✅', label:'Semble authentique' }, 'PROBABLEMENT FAUX': { cls:'fake', icon:'🚨', label:'Probablement faux ou une arnaque' }, 'INCERTAIN': { cls:'unsure', icon:'🤔', label:'Difficile à dire — restez prudent' } }
+  };
+
+  const VERDICT_PATTERN = { en: /VERDICT:\s*(REAL|LIKELY FAKE|UNCERTAIN)/i, fr: /VERDICT\s*:\s*(VRAI|PROBABLEMENT FAUX|INCERTAIN)/i };
+  const EXPL_PATTERN    = { en: /EXPLANATION:\s*([\s\S]*?)(?=TIPS:|$)/i, fr: /EXPLICATION\s*:\s*([\s\S]*?)(?=CONSEILS\s*:|$)/i };
+  const TIPS_PATTERN    = { en: /TIPS:\s*([\s\S]*?)$/i, fr: /CONSEILS\s*:\s*([\s\S]*?)$/i };
+  const TIPS_LABEL      = { en: 'What to do now', fr: 'Que faire maintenant' };
+  const ERR_LABEL       = { en: { title: 'Could not connect', body: 'Something went wrong. Please check your internet and try again.' }, fr: { title: 'Connexion impossible', body: 'Une erreur s\'est produite. Vérifiez votre connexion Internet et réessayez.' } };
+  const ALERT_MSG       = { en: 'Please paste or type something first.', fr: 'Veuillez d\'abord coller ou écrire quelque chose.' };
+
+  function switchTab(btn, panelId) {
+    document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active'); btn.setAttribute('aria-selected','true');
+    document.getElementById('panel-' + panelId).classList.add('active');
+  }
+
+  function loadExample(type, text) {
+    const tabMap = { message:0, news:1, photo:2 };
+    document.querySelectorAll('.tab-btn')[tabMap[type]].click();
+    setTimeout(() => { document.getElementById('input-' + type).value = text; }, 50);
+    document.getElementById('tool').scrollIntoView({ behavior:'smooth' });
+  }
+
+  async function check(type) {
+    const input = document.getElementById('input-' + type).value.trim();
+    if (!input) { alert(ALERT_MSG[lang]); return; }
+    const linkEl = document.getElementById('link-' + type);
+    const link = linkEl ? linkEl.value.trim() : '';
+    const loading = document.getElementById('loading-' + type);
+    const resultBox = document.getElementById('result-' + type);
+    const btn = resultBox.closest('.panel').querySelector('.check-btn');
+    resultBox.style.display = 'none'; loading.style.display = 'block'; btn.disabled = true;
+    const linkNote = link ? (lang === 'en' ? `\n\nThe user also provided this link: ${link}. Analyse the URL structure for red flags (suspicious domain, misleading path, unusual characters) — do not visit it.` : `\n\nL'utilisateur a aussi fourni ce lien : ${link}. Analyse la structure de l'URL pour détecter des signaux d'alerte (domaine suspect, chemin trompeur, caractères inhabituels) — ne le visite pas.`) : '';
+    const userPrompt = lang === 'en'
+      ? `Please analyse this ${TYPE_LABELS.en[type]} and tell me if it's real, fake, or uncertain:\n\n"${input}"${linkNote}`
+      : `Analyse ce contenu (${TYPE_LABELS.fr[type]}) et dis-moi s'il est vrai, faux ou incertain :\n\n"${input}"${linkNote}`;
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1000, system: PROMPTS[lang], messages: [{ role:'user', content: userPrompt }] })
+      });
+      const data = await res.json();
+      renderResult(type, data.content?.[0]?.text || '');
+    } catch(e) {
+      loading.style.display = 'none'; btn.disabled = false;
+      resultBox.className = 'result-box unsure'; resultBox.style.display = 'block';
+      resultBox.querySelector('.verdict-icon').textContent = '⚠️';
+      resultBox.querySelector('.verdict-label').textContent = ERR_LABEL[lang].title;
+      resultBox.querySelector('.result-text').textContent = ERR_LABEL[lang].body;
+      resultBox.querySelector('.result-tips').innerHTML = '';
+    }
+  }
+
+  function renderResult(type, raw) {
+    const loading = document.getElementById('loading-' + type);
+    const resultBox = document.getElementById('result-' + type);
+    const btn = resultBox.closest('.panel').querySelector('.check-btn');
+    loading.style.display = 'none'; btn.disabled = false;
+    const vMatch = raw.match(VERDICT_PATTERN[lang]);
+    const eMatch = raw.match(EXPL_PATTERN[lang]);
+    const tMatch = raw.match(TIPS_PATTERN[lang]);
+    const verdict = vMatch ? vMatch[1].toUpperCase() : (lang === 'en' ? 'UNCERTAIN' : 'INCERTAIN');
+    const explanation = eMatch ? eMatch[1].trim() : raw;
+    const tipsRaw = tMatch ? tMatch[1].trim() : '';
+    const cfg = VERDICTS[lang][verdict] || (lang === 'en' ? VERDICTS.en['UNCERTAIN'] : VERDICTS.fr['INCERTAIN']);
+    resultBox.className = 'result-box ' + cfg.cls;
+    resultBox.querySelector('.verdict-icon').textContent = cfg.icon;
+    resultBox.querySelector('.verdict-label').textContent = cfg.label;
+    resultBox.querySelector('.result-text').textContent = explanation;
+    let tipsHtml = '';
+    if (tipsRaw) {
+      const tips = tipsRaw.split('\n').filter(l => l.trim().startsWith('•') || l.trim().startsWith('-'));
+      if (tips.length) tipsHtml = `<div class="result-tips"><h4>${TIPS_LABEL[lang]}</h4><ul>${tips.map(t => `<li>${t.replace(/^[•\-]\s*/,'')}</li>`).join('')}</ul></div>`;
+    }
+    resultBox.querySelector('.result-tips').innerHTML = tipsHtml;
+    resultBox.style.display = 'block';
+    const listenBtn = document.getElementById('listen-' + type);
+    if (listenBtn) listenBtn.style.display = 'flex';
+    resultBox.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  }
+
+  // ── CALL CHECKLIST ────────────────────────────────────────
+  const SCORES = {
+    en: {
+      0: { cls: 'safe',    verdict: '✅ Probably a genuine call',       text: 'None of the typical warning signs were present. That said, if something still felt off, trust your instinct and call the organisation back on their official number.' },
+      1: { cls: 'safe',    verdict: '✅ Likely genuine, but stay alert', text: 'Only one warning sign — probably fine, but worth double-checking by calling the organisation directly on their official number.' },
+      2: { cls: 'warning', verdict: '⚠️ Some red flags — be cautious',   text: 'Two warning signs were present. Do not give any more information. Hang up and call the organisation back using their official number — not the one the caller gave you.' },
+      3: { cls: 'warning', verdict: '⚠️ Several red flags — likely a scam', text: 'This has the hallmarks of a scam call. Do not transfer any money or give personal details. Hang up, contact your bank directly, and speak to a trusted family member.' },
+      high: { cls: 'danger', verdict: '🚨 Very likely a scam — act now',  text: 'Multiple serious warning signs. Do not do anything the caller asked. If you already shared information or transferred money, contact your bank immediately. Report the call to your national fraud authority.' }
+    },
+    fr: {
+      0: { cls: 'safe',    verdict: '✅ Probablement un appel authentique', text: 'Aucun signe d\'alerte typique n\'était présent. Cela dit, si quelque chose vous a semblé bizarre, faites confiance à votre instinct et rappelez l\'organisme sur son numéro officiel.' },
+      1: { cls: 'safe',    verdict: '✅ Probablement authentique, mais restez vigilant', text: 'Un seul signe d\'alerte — probablement sans danger, mais vérifiez en rappelant directement l\'organisme sur son numéro officiel.' },
+      2: { cls: 'warning', verdict: '⚠️ Quelques signaux d\'alerte — soyez prudent', text: 'Deux signaux d\'alerte étaient présents. Ne donnez plus d\'informations. Raccrochez et rappelez l\'organisme sur son numéro officiel — pas celui que l\'appelant vous a donné.' },
+      3: { cls: 'warning', verdict: '⚠️ Plusieurs signaux — probablement une arnaque', text: 'Cet appel présente les caractéristiques d\'une arnaque. Ne transférez pas d\'argent et ne donnez pas de données personnelles. Raccrochez et contactez directement votre banque.' },
+      high: { cls: 'danger', verdict: '🚨 Très probablement une arnaque — agissez maintenant', text: 'Plusieurs signaux d\'alerte graves. Ne faites rien de ce que l\'appelant vous a demandé. Si vous avez déjà partagé des informations ou transféré de l\'argent, contactez immédiatement votre banque et signalez l\'appel sur cybermalveillance.gouv.fr.' }
+    }
+  };
+
+  function updateScore() {
+    const boxes = document.querySelectorAll('#call-checklist input[type=checkbox]');
+    const count = [...boxes].filter(b => b.checked).length;
+    const scoreBox = document.getElementById('score-box');
+    const scoreVerdict = document.getElementById('score-verdict');
+    const scoreText = document.getElementById('score-text');
+    const listenBtn = document.getElementById('listen-call-score');
+
+    if (count === 0) { scoreBox.style.display = 'none'; return; }
+
+    const key = count >= 4 ? 'high' : count;
+    const s = SCORES[lang][key];
+    scoreBox.className = 'score-box ' + s.cls;
+    scoreVerdict.textContent = s.verdict;
+    scoreText.textContent = s.text;
+    scoreBox.style.display = 'block';
+    listenBtn.style.display = 'flex';
+  }
+
+  function readAloudScore() {
+    const scoreVerdict = document.getElementById('score-verdict').textContent;
+    const scoreText = document.getElementById('score-text').textContent;
+    const listenBtn = document.getElementById('listen-call-score');
+    const fullText = `${scoreVerdict}. ${scoreText}`;
+
+    if (currentSpeech) {
+      window.speechSynthesis.cancel();
+      currentSpeech = null;
+      listenBtn.classList.remove('speaking');
+      listenBtn.querySelector('span').textContent = lang === 'fr' ? 'Lire à voix haute' : 'Read this aloud';
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(fullText);
+    utterance.lang = lang === 'fr' ? 'fr-FR' : 'en-GB';
+    utterance.rate = 0.9;
+    currentSpeech = utterance;
+    listenBtn.classList.add('speaking');
+    listenBtn.querySelector('span').textContent = lang === 'fr' ? '⏹ Arrêter' : '⏹ Stop reading';
+    utterance.onend = () => {
+      listenBtn.classList.remove('speaking');
+      listenBtn.querySelector('span').textContent = lang === 'fr' ? 'Lire à voix haute' : 'Read this aloud';
+      currentSpeech = null;
+    };
+    window.speechSynthesis.speak(utterance);
+  }
+
+  // ── VOICE ─────────────────────────────────────────────────
+  let currentRecognition = null;
+  let currentSpeech = null;
+
+  function startListening(type) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const micBtn = document.getElementById('mic-' + type);
+    const noVoice = document.getElementById('no-voice-' + type);
+
+    if (!SpeechRecognition) {
+      noVoice.style.display = 'block';
+      return;
+    }
+
+    // if already listening, stop
+    if (currentRecognition) {
+      currentRecognition.stop();
+      currentRecognition = null;
+      micBtn.classList.remove('listening');
+      micBtn.querySelector('span:last-child').setAttribute('data-en', 'Or speak your message');
+      applyLang(lang);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = lang === 'fr' ? 'fr-FR' : 'en-GB';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    currentRecognition = recognition;
+
+    micBtn.classList.add('listening');
+    const spanEl = micBtn.querySelector('span[data-en]');
+    spanEl.textContent = lang === 'fr' ? '🔴 Parlez maintenant…' : '🔴 Listening… tap to stop';
+
+    recognition.onresult = (e) => {
+      const transcript = e.results[0][0].transcript;
+      const textarea = document.getElementById('input-' + type);
+      textarea.value = textarea.value ? textarea.value + ' ' + transcript : transcript;
+      micBtn.classList.remove('listening');
+      spanEl.setAttribute('data-en', 'Or speak your message');
+      spanEl.setAttribute('data-fr', 'Ou parlez votre message');
+      applyLang(lang);
+      currentRecognition = null;
+    };
+
+    recognition.onerror = () => {
+      micBtn.classList.remove('listening');
+      applyLang(lang);
+      currentRecognition = null;
+    };
+
+    recognition.onend = () => {
+      micBtn.classList.remove('listening');
+      applyLang(lang);
+      currentRecognition = null;
+    };
+
+    recognition.start();
+  }
+
+  function readAloud(type) {
+    const resultBox = document.getElementById('result-' + type);
+    const listenBtn = document.getElementById('listen-' + type);
+    const verdict = resultBox.querySelector('.verdict-label').textContent;
+    const explanation = resultBox.querySelector('.result-text').textContent;
+    const tipsItems = [...resultBox.querySelectorAll('.result-tips li')].map(li => li.textContent).join('. ');
+    const fullText = `${verdict}. ${explanation}${tipsItems ? '. ' + tipsItems : ''}`;
+
+    // if already speaking, stop
+    if (currentSpeech) {
+      window.speechSynthesis.cancel();
+      currentSpeech = null;
+      listenBtn.classList.remove('speaking');
+      listenBtn.querySelector('span').textContent = lang === 'fr' ? 'Lire à voix haute' : 'Read this aloud';
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(fullText);
+    utterance.lang = lang === 'fr' ? 'fr-FR' : 'en-GB';
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+
+    listenBtn.classList.add('speaking');
+    listenBtn.querySelector('span').textContent = lang === 'fr' ? '⏹ Arrêter' : '⏹ Stop reading';
+    currentSpeech = utterance;
+
+    utterance.onend = () => {
+      listenBtn.classList.remove('speaking');
+      listenBtn.querySelector('span').textContent = lang === 'fr' ? 'Lire à voix haute' : 'Read this aloud';
+      currentSpeech = null;
+    };
+
+    window.speechSynthesis.speak(utterance);
+  }
+
+  // ── INIT ──────────────────────────────────────────────────
+  applyLang(detectLang());
+</script>
+</body>
+</html>
