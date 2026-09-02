@@ -3,13 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-EKF3BTDXV9"></script>
+<!-- Google Consent Mode default state: deny until user accepts -->
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+  gtag('consent', 'default', {
+    'analytics_storage': 'denied'
+  });
+</script>
 
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-EKF3BTDXV9"></script>
+<script>
+  gtag('js', new Date());
   gtag('config', 'G-EKF3BTDXV9');
 </script>
 <title>Clarifaux — Spot AI fakes / Repérez les faux</title>
@@ -890,6 +896,33 @@ CONSEILS :
 
     recognition.start();
   }
+ <div id="cookie-banner" style="position:fixed;bottom:0;left:0;right:0;background:#222;color:#fff;padding:1rem;text-align:center;z-index:9999;">
+  We use cookies to understand site traffic.
+  <button onclick="acceptCookies()" style="margin-left:10px;padding:5px 15px;">Accept</button>
+  <button onclick="rejectCookies()" style="margin-left:5px;padding:5px 15px;">Reject</button>
+</div>
+
+<script>
+  function acceptCookies() {
+    gtag('consent', 'update', { 'analytics_storage': 'granted' });
+    localStorage.setItem('cookie_consent', 'granted');
+    document.getElementById('cookie-banner').style.display = 'none';
+  }
+  function rejectCookies() {
+    localStorage.setItem('cookie_consent', 'denied');
+    document.getElementById('cookie-banner').style.display = 'none';
+  }
+  // Remember choice on repeat visits
+  window.addEventListener('DOMContentLoaded', () => {
+    const consent = localStorage.getItem('cookie_consent');
+    if (consent === 'granted') {
+      gtag('consent', 'update', { 'analytics_storage': 'granted' });
+      document.getElementById('cookie-banner').style.display = 'none';
+    } else if (consent === 'denied') {
+      document.getElementById('cookie-banner').style.display = 'none';
+    }
+  });
+</script>
 
   function readAloud(type) {
     const resultBox = document.getElementById('result-' + type);
